@@ -7,3 +7,21 @@ Ended Date:
 15th, January 2026
 
 ==========================================
+I will explain each file's purpose. You need:
+## Docker-Installation.md
+Learn how to set up Docker on Linux machines.
+
+## SSH-Communication.md
+Learn how to set up SSH communication to send TLS keys from Machine B (Docker Instance Host) to Machine A (CTFd Host).
+
+## Setting-Up-CTFd.md
+This is a simple CTFd framework setup.
+
+# CTFd-Instance/
+The folder consists of:
+## CTFd-Dynamic-Instance.md
+Learn how to set up instances to host any challenges that require links, such as web, crypto, and rev. It will mention how to set up a TLS connection for the instances to work. Most importantly, this is the part where the "Start Instance" button is covered/created. 
+
+## Issues-Encountered.md
+This will cover the issue I encountered and the solutions to resolve.
+
