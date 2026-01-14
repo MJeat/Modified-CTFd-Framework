@@ -1,6 +1,7 @@
 # Static Instance
 This is a static instance. Meaning everyone can only access this one port. This has no start instances. Just running instances from one container. It is vulnerable cuz players can attack each other and can DOS this one container.
 This has no “Start Instance” button. It’s just running in the background as you open the Ubuntu server. In this case, we’ll create a basic website.
+
 *Note: This requires 1 machine.*
 
 # Step 1:
