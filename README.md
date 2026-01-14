@@ -12,7 +12,7 @@ I will explain each file's purpose. You need:
 Learn how to set up Docker on Linux machines.
 
 ## SSH-Communication.md
-Learn how to set up SSH communication to send TLS keys from Machine B (Docker Instance Host) to Machine A (CTFd Host).
+Learn how to set up SSH communication to send TLS keys from Machine B (Docker Instance Host) to Machine A (CTFd Host). You need these keys to set up dynamic instances.
 
 ## Setting-Up-CTFd.md
 This is a simple CTFd framework setup.
