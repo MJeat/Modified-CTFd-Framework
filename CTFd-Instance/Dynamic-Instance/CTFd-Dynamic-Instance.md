@@ -601,6 +601,9 @@ function get_docker_status(container) {
 ### 5. view.html
 
 Fourth file location: (CTFd/CTFd/plugins/docker_challenges/assets), view.html file:
+
+Check [view.html](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/CTFd-Instance/Dynamic-Instance/Modifed-Files/view.html)
+
 The original has the word saying, “Start an instance for a challenge”. I changed it to “LAUNCH INSTANCE”. 
 
 ```
