@@ -506,7 +506,7 @@ services:
         internal:
 ```
 
-### 3. \__init__.py\
+### 3. `__init__.py`
 
 Since the code is too long, check [__init__.py](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/CTFd-Instance/Dynamic-Instance/Modifed-Files/__init__.py).
 
