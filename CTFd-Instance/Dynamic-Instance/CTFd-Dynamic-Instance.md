@@ -277,7 +277,7 @@ After you setup CTFd *Step 2.2 Install CTFd Docker Plugin* and host a docker cha
 To fix this, in the CTFd Host machine or Machine A, you have to create 1 file and modify 5 files.
 
 ### 1. fixed_plugins.py
-Create a file called ```fixed_plugins.py``` and modify it:
+Create a file called ```~/CTFd/fixed_plugins.py``` and modify it:
 For full code, check [fixed_plugins.py](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/CTFd-Instance/Dynamic-Instance/Modifed-Files/fixed_plugins.py) <br/>
 Just copy this container Python file out because it has read-only access. Make sure you are in the ```~/CTFd/``` directory:
 ``` 
@@ -468,7 +468,7 @@ def load(app):
 ```
 
 ### 2. docker-compose.yml
-Second file, docker-compose.yml:
+Second file, ```~/CTFd/docker-compose.yml```:
 
 Navigate to ~/CTFd/
 
@@ -504,5 +504,97 @@ services:
     networks:
         default:
         internal:
+```
+
+### 3. \__init__.py\
+
+Since the code is too long, check [__init__.py](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/CTFd-Instance/Dynamic-Instance/Modifed-Files/__init__.py).
+
+The location of the file is: ```~/CTFd/CTFd/plugins/docker_challenges/```
+
+
+### 4. view.js
+
+You ONLY need to change the ```function get_docker_status``` 
+
+Check [view.js](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/CTFd-Instance/Dynamic-Instance/Modifed-Files/view.js).
+
+The location of the file is: ```~/CTFd/CTFd/plugins/docker_challenges/assets```
+
+```
+function get_docker_status(container) {
+    const containerDiv = CTFd.lib.$('#docker_container');
+    const NormalStartButtonHTML = `
+        <span>
+            <a onclick="start_container('${container}');" class='btn btn-dark'>
+                <small style='color:white;'><i class="fas fa-play"></i> <b>START INSTANCE</b></small>
+            </a>
+        </span>`;
+
+    CTFd.fetch("/api/v1/docker_status")
+    .then(response => response.json())
+    .then(result => {
+        if (!result.success || !result.data || result.data.length === 0) {
+            containerDiv.html(NormalStartButtonHTML);
+            return;
+        }
+
+        let matchFound = false;
+        result.data.forEach(item => {
+            if (item.docker_image == container) {
+                matchFound = true;
+                const ports = String(item.ports).split(',');
+                let data = '';
+                
+                ports.forEach(port => {
+                    const cleanPort = port.split('/')[0];
+                    const fullAddress = `${item.host}:${cleanPort}`;
+                    // Added the href Link format you requested
+                    data += `Link: <a href="http://${fullAddress}" target="_blank" style="color: #00bc8c; text-decoration: underline;">${fullAddress}</a><br />`;
+                });
+
+                const instance_short_id = String(item.instance_id).substring(0, 10);
+                
+                containerDiv.html(`
+                    <pre style="color:inherit;">Docker Container Information:<br />${data}</pre>
+                    <div class="mb-2">
+                        <a onclick="start_container('${item.docker_image}');" class="btn btn-warning btn-sm mr-2">
+                            <small style="color:black;"><i class="fas fa-sync-alt"></i> <b>RESTART INSTANCE</b></small>
+                        </a>
+                    </div>
+                    <div id="${instance_short_id}_expiry_timer"></div>
+                `);
+
+                const countDownDate = new Date(parseInt(item.revert_time) * 1000).getTime();
+                if (window.dockerInterval) clearInterval(window.dockerInterval);
+
+                window.dockerInterval = setInterval(function() {
+                    const now = new Date().getTime();
+                    const distance = countDownDate - now;
+
+                    if (distance <= 0) {
+                        clearInterval(window.dockerInterval);
+                        containerDiv.html('<small class="text-info">Instance expired. Resetting UI...</small>');
+                        
+                        // Increased to 7 seconds to ensure the Python thread (which sleeps 3s) has run
+                        setTimeout(() => {
+                            get_docker_status(container);
+                        }, 7000);
+                        return;
+                    }
+
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+
+                    CTFd.lib.$(`#${instance_short_id}_expiry_timer`).html(
+                        `<small class="text-muted">Instance expires in: <b>${minutes}:${seconds}</b></small>`
+                    );
+                }, 1000);
+            }
+        });
+
+        if (!matchFound) containerDiv.html(NormalStartButtonHTML);
+    });
+}
 ```
 
