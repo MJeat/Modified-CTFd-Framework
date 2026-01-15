@@ -161,6 +161,7 @@ key.pem
 server-cert.pem  
 server-key.pem
 ```
+You should follow [SSH-Communication](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/SSH-Communication.md) for this step. <br/>
 3 of these files are required for the CTFd host to securely communicate with the Docker Instance Host.
 
 ## Part 3: Enabling TLS on the Docker Daemon (Docker Instance Host)
