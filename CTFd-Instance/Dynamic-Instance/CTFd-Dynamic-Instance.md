@@ -68,7 +68,9 @@ Generate the CA certificate (the certificate details are not critical):
 ```
 openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem
 ```
-You will be prompted to input some info. You can tag along or leave it blank by typing "." > Enter
+You will be prompted to input some info. You can tag along or leave it blank by typing "." > Enter. However, make sure you write $HOST in the `Common Name` section.
+<img width="1039" height="356" alt="Screenshot 2026-01-09 125526" src="https://github.com/user-attachments/assets/b79d5394-8c9a-4f1c-b0af-24d2c82da96f" />
+
 
 ### 2. Server Certificate – Generate
 Generate the server private key:
