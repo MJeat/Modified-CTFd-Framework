@@ -2,6 +2,8 @@
 
 # Problem 1:
 After running Part 3.2 in Dynamic Instance, I encountered an issue with restarting Docker.
+<img width="1350" height="462" alt="Screenshot 2026-01-09 175848" src="https://github.com/user-attachments/assets/ae15d87f-c343-4ad9-a46e-11a78b3b0301" />
+
 
 ## Solution #1: Fix systemd override
 ```
