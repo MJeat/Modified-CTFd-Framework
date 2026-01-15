@@ -28,7 +28,7 @@ Both machines must install Docker.
 ```
 git clone https://github.com/CTFd/CTFd
 ```
-(Check [Setting-Up-CTFd](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/Setting-Up-CTFd.md)) 
+(Check [Setting-Up-CTFd](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/Setting-Up-CTFd.md)) <br/>
 *Note: You have to be inside CTFd/ to use the Docker Compose command*
 
 ## 2. Install CTFd Docker Plugin
@@ -36,7 +36,7 @@ git clone https://github.com/CTFd/CTFd
 ```
 git clone https://github.com/offsecginger/CTFd-Docker-Challenges
 ```
-Then, move ```docker-challenges/``` from this directory into ```CTFd/CTFd/plugins```
+Then, move ```docker-challenges/``` from this directory into ```CTFd/CTFd/plugins``` <br/>
 Next, go inside ```CTFd/``` from ```~/``` directory, and type: 
 ```
 docker compose down 
@@ -55,7 +55,7 @@ This is about Securing Docker Daemon Access with TLS (HTTPS).
 - Create a new directory anywhere on the Docker Instance Host to store the certificates, then proceed with the following steps.
 
 ### 0. Initial
-Make a directory called ctfd-certs/ then enter.
+Make a directory called ```ctfd-certs/``` in the ```~/``` directory, then enter ```ctfd-certs/``` .
 
 ### 1. Certificate Authority (CA) – Generate
 Generate a private RSA key for the CA (you will be prompted to set a secure passphrase):
@@ -83,17 +83,25 @@ openssl req -subj "/CN=$HOST" -sha256 -new -key server-key.pem -out server.csr
 
 If $HOST is a DNS name, add both the DNS name and the IP addresses it resolves to:
 ```
-echo subjectAltName = DNS:$HOST,IP:10.10.10.20,IP:127.0.0.1 >> extfile.cnf
+echo subjectAltName = DNS:$HOST,IP:192.168.100.59,IP:127.0.0.1 >> extfile.cnf
 echo extendedKeyUsage = serverAuth >> extfile.cnf
 ```
 
 If you don’t have a DNS name, you can use this as a one-for-all:
 ```
 cat > extfile.cnf <<EOF
+subjectAltName = IP:{Machine-B-IP},IP:127.0.0.1
+extendedKeyUsage = serverAuth
+EOF
+```
+Example:
+```
+cat > extfile.cnf <<EOF
 subjectAltName = IP:192.168.100.59,IP:127.0.0.1
 extendedKeyUsage = serverAuth
 EOF
 ```
+
 Generate the signed server certificate:
 ```
 openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem \
@@ -243,7 +251,7 @@ key.pem (If error, try Server-key.pem)
 cert.pem (If error, try Server-cert.pem)
 ```
 - Click Submit
-If configured correctly, the page will refresh and display Docker images available on the Docker Instance Host.
+If configured correctly, the page will refresh and display Docker images available on the Docker Instance Host. <br/>
 *Note: You might encounter an issue with key.pem and cert.pem. You should check Part 3.2: Start Docker with TLS Enabled*
 
 ## Part 5: Adding Instance-Based Challenges
