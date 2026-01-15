@@ -278,7 +278,7 @@ To fix this, in the CTFd Host machine or Machine A, you have to create 1 file an
 
 ### 1. fixed_plugins.py
 Create a file called ```fixed_plugins.py``` and modify it:
-For full code, check [fixed_plugins.py](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/CTFd-Instance/Dynamic-Instance/Modifed-Files/fixed_plugins.py)
+For full code, check [fixed_plugins.py](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/CTFd-Instance/Dynamic-Instance/Modifed-Files/fixed_plugins.py) <br/>
 Just copy this container Python file out because it has read-only access. Make sure you are in the ```~/CTFd/``` directory:
 ``` 
 docker cp ctfd-ctfd-1:/opt/CTFd/CTFd/plugins/docker_challenges/__init__.py ./fixed_plugin.py
