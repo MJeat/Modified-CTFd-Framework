@@ -28,3 +28,6 @@ Learn how to set up instances to host any challenges that require links, such as
 ## Issues-Encountered.md
 This will cover the issue I encountered and the solutions to resolve.
 
+## Troubleshoot.md
+This will cover the troubleshooting or a checklist to monitor if anything goes wrong. This would be nice to check if you have no idea what's going on. 
+
