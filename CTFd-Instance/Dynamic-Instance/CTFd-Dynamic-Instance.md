@@ -598,3 +598,31 @@ function get_docker_status(container) {
 }
 ```
 
+### 5. view.html
+
+Fourth file location: (CTFd/CTFd/plugins/docker_challenges/assets), view.html file:
+The original has the word saying, “Start an instance for a challenge”. I changed it to “LAUNCH INSTANCE”. 
+
+```
+{% extends "challenge.html" %}
+{% block description %}
+{{ challenge.html }}
+<div class='mb-3 text-center' id='docker_container' name='{{ challenge.docker_image | safe }}'>
+    <span>
+        <a onclick="start_container('{{ challenge.docker_image | safe }}');" class='btn btn-dark'>
+            <small style='color:white;'><i class="fas fa-play"></i>  LAUNCH INSTANCE </small>
+        </a>
+    </span>
+</div>
+{% endblock %}
+{% block input %}
+<input id="challenge-id" class="challenge-id" type="hidden" value="{{ challenge.id }}">
+<input id="challenge-input" class="challenge-input form-control" type="text" name="submission" @keyup.enter="submitChallenge()" placeholder="Flag" x-model="submission">
+{% endblock %}
+{% block submit %}
+<button id="challenge-submit" class="challenge-submit btn btn-outline-secondary w-100 h-100" type="submit" @click.debounce.500ms="submitChallenge()">
+    Submit
+</button>
+{% endblock %}
+```
+
