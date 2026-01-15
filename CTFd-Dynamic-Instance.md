@@ -54,7 +54,8 @@ This is about Securing Docker Daemon Access with TLS (HTTPS).
 - Do not expose or share these files publicly.
 - Create a new directory anywhere on the Docker Instance Host to store the certificates, then proceed with the following steps.
 
-### 0. Initially, make a directory called ctfd-certs/ then enter.
+### 0. Initial
+Make a directory called ctfd-certs/ then enter.
 
 ### 1. Certificate Authority (CA) – Generate
 Generate a private RSA key for the CA (you will be prompted to set a secure passphrase):
