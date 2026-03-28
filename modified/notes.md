@@ -27,6 +27,7 @@ These files define the structure of every page.
 | :--- | :--- |
 | **`base.html`** | The master template. Contains the `<head>`, global CSS links, and the overall structure. |
 | **`components/`** | Small, reusable UI pieces like the **navbar.html** or **notifications.html**. |
+| **`navbar.html`** | Is the template for your site's navigation bar—the menu at the top of the screen that users see on every page. |
 | **`challenges.html`** | The main "Challenge Board" grid view. |
 | **`challenge.html`** | The pop-up/modal view when you click a specific challenge. |
 | **`scoreboard.html`** | The page showing the rankings and graphs. |
