@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% if request.path == '/writeups' %}
+    <div class="jumbotron bg-transparent border-bottom border-success rounded-0">
+        <div class="container text-center">
+            <h1 class="display-4 font-weight-bold" style="text-shadow: 0 0 10px var(--hacker-green);">[INTEL_REPOSITORY]</h1>
+            <p class="lead text-success">> ACCESSING ARCHIVED EXPLOITS... DONE.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 p-4" style="background: rgba(0, 255, 65, 0.05); border: 1px solid var(--hacker-green);">
+                <h2 class="text-success border-bottom border-success pb-2">SQL Injection 101</h2>
+                <p>Add your hardcoded solutions here!</p>
+                <pre class="bg-black text-white p-3 border border-secondary"><code>' OR 1=1 --</code></pre>
+            </div>
+        </div>
+    </div>
+
+  {% else %}
+    <div class="container mt-5">
+        <h1 class="text-success">{{ page.title }}</h1>
+        <hr class="bg-success">
+        <div class="text-white">
+            {{ page.content | safe }}
+        </div>
+    </div>
+  {% endif %}
+{% endblock %}
