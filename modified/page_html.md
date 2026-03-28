@@ -1,6 +1,28 @@
+
+Original version:
+
+```
 {% extends "base.html" %}
 
 {% block content %}
+  <div class="container">
+    {{ content | safe }}
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ Assets.js("assets/js/page.js") }}
+{% endblock %}
+```
+
+
+Updated Version:
+
+```
+{% extends "base.html" %}
+
+{% block content %}
+  {# Check if we are on the writeups route #}
   {% if request.path == '/writeups' %}
     <div class="jumbotron bg-transparent border-bottom border-success rounded-0">
         <div class="container text-center">
@@ -19,13 +41,23 @@
         </div>
     </div>
 
+  {# This is the safe fallback for other pages #}
   {% else %}
     <div class="container mt-5">
-        <h1 class="text-success">{{ page.title }}</h1>
+        <h1 class="text-success">{{ page.title if page else "INFORMATION" }}</h1>
         <hr class="bg-success">
         <div class="text-white">
-            {{ page.content | safe }}
+            {# Use 'content' for the homepage and 'page.content' for others #}
+            {{ content | safe if content else '' }}
+            {{ page.content | safe if page else '' }}
         </div>
     </div>
   {% endif %}
 {% endblock %}
+
+{% block scripts %}
+  {{ Assets.js("assets/js/page.js") }}
+{% endblock %}
+
+```
+
