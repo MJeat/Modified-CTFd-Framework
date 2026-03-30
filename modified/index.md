@@ -27,6 +27,8 @@
 
 To change this, you need to go to Admin Panel > Pages > All Pages > Index
 
+Enable HTML (Not Markdown)
+
 ```
 <style>
   :root {
