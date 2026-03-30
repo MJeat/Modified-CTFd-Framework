@@ -1,8 +1,8 @@
-Note that this is for changing the landing page. 
+# Note that this is for changing the landing page. 
 
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/559e3fa2-11cf-4e4b-8048-12249423c1c8" />
 
-Original Code:
+## Original Code:
 
 ```
 <div class="row">
@@ -23,7 +23,7 @@ Original Code:
 </div>
 ```
 
-Modified Code: 
+# Modified Code: 
 
 To change this, you need to go to Admin Panel > Pages > All Pages > Index
 
@@ -165,13 +165,7 @@ To change this, you need to go to Admin Panel > Pages > All Pages > Index
 ```
 
 
+# Result:
 
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/44217443-fc6d-49c7-94b1-b5ca713cd325" />
 
-
-
-
-
-
-Result:
-
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5f5a05d5-2bdb-465b-ad09-9c2923c85793" />
