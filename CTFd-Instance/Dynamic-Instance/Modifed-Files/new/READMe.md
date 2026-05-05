@@ -3,7 +3,7 @@
 
 | File Path | Modification Made |
 | :--- | :--- |
-| **`[CTFd/docker_challenges/__init__.py](https://github.com/MJeat/Modified-CTFd-Framework/blob/main/CTFd-Instance/Dynamic-Instance/Modifed-Files/new/__init__.py)`** | Updated to make sure the Docker talks to another VM |
+| **(CTFd/docker_challenges/__init__.py)[https://github.com/MJeat/Modified-CTFd-Framework/blob/main/CTFd-Instance/Dynamic-Instance/Modifed-Files/new/__init__.py]** | Updated to make sure the Docker talks to another VM |
 | **`CTFd/models/__init__.py`** | Added `value = db.Column(db.Integer)` to the **`Solves`** class so Python recognizes the new column. |
 | **`CTFd/plugins/challenges/__init__.py`** | Updated the `solve` method to include `value=challenge.value` when creating a new `Solves` object. |
 | **`CTFd/plugins/dynamic_challenges/__init__.py`** | Updated the `solve` method to call the parent logic *before* recalculating the new (lower) decay value. |
