@@ -96,15 +96,13 @@ config_ini.read(path)
 
 # fmt: off
 class ServerConfig(object):
-	"""    
-	SECRET_KEY: str = empty_str_cast(config_ini["server"]["SECRET_KEY"]) \
+    """    
+    SECRET_KEY: str = empty_str_cast(config_ini["server"]["SECRET_KEY"]) \
         or gen_secret_key()
     """
     # The SECRET_KEY here is used for validation. The static key is found in the docker-compose.yaml file
-    SECRET_KEY: str = os.getenv("SECRET_KEY") \
-    or empty_str_cast(config_ini["server"]["SECRET_KEY"]) \
-    or gen_secret_key()
-
+    # SECRET_KEY: str = os.getenv("SECRET_KEY") or empty_str_cast(config_ini["server"]["SECRET_KEY"]) or gen_secret_key()
+    SECRET_KEY: str = os.getenv("SECRET_KEY") or empty_str_cast(config_ini["server"]["SECRET_KEY"]) or gen_secret_key()
     DATABASE_URL: str = empty_str_cast(config_ini["server"]["DATABASE_URL"])
     if not DATABASE_URL:
         if empty_str_cast(config_ini["server"]["DATABASE_HOST"]) is not None:
