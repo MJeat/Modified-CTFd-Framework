@@ -1,0 +1,76 @@
+services:
+  ctfd:
+    build: .
+    user: root
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - UPLOAD_FOLDER=/var/uploads
+      - DATABASE_URL=mysql+pymysql://ctfd:ctfd@db/ctfd
+      - REDIS_URL=redis://cache:6379
+      - WORKERS=1
+      - LOG_FOLDER=/var/log/CTFd
+      - ACCESS_LOG=-
+      - ERROR_LOG=-
+      - REVERSE_PROXY=true
+      - .data/CTFd/logs:/var/log/CTFd
+      - .data/CTFd/uploads:/var/uploads
+      - .:/opt/CTFd:ro
+      # --- SESSION SECURITY (All of these below can be reconfigure in CTFd/config.py)
+      # These below are basically variables for the config.py to function ---
+      # Set a static secret key so nonces/sessions survive a restart. You can generate a 64-bits strings and store in .env during production
+      - SECRET_KEY=dsaiuhreiwhr2kn2wekfndlskKJdsl
+      # Since you are using Nginx on port 80 (HTTP), keep SECURE=false
+      - SESSION_COOKIE_SECURE=false      # Only =true when its in production with SSL/TLS or HTTPS. If you don't have HTTPS, set it to =false
+      - SESSION_PERMANENT=True			 # If =False, your session will expire the moment you refresh browser or close the tab
+      - PERMANENT_SESSION_LIFETIME=86400 # Session expires in 24 hours upon logging in or staying
+      - SESSION_COOKIE_HTTPONLY=true     # Prevents JavaScript from stealing cookies (XSS protection)
+      - SESSION_COOKIE_SAMESITE=Lax      # Prevents CSRF attacks 
+     
+      # Plugin fix mapping
+      - ./fixed_plugins.py:/CTFd/CTFd/plugins/docker_challenges/__init__.py:ro
+    depends_on:
+      - db
+    networks:
+        default:
+        internal:
+
+  nginx:
+    image: nginx:stable
+    restart: always
+    volumes:
+      - ./conf/nginx/http.conf:/etc/nginx/nginx.conf
+    ports:
+      - 80:80
+    depends_on:
+      - ctfd
+
+  db:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=ctfd
+      - MARIADB_USER=ctfd
+      - MARIADB_PASSWORD=ctfd
+      - MARIADB_DATABASE=ctfd
+      - MARIADB_AUTO_UPGRADE=1
+    volumes:
+      - .data/mysql:/var/lib/mysql
+    networks:
+        internal:
+    # Optimized for CTFd
+    command: [mysqld, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci, --wait_timeout=28800, --log-warnings=0]
+
+  cache:
+    image: redis:4
+    restart: always
+    volumes:
+    - .data/redis:/data
+    networks:
+        internal:
+
+networks:
+    default:
+    internal:
+        internal: true
