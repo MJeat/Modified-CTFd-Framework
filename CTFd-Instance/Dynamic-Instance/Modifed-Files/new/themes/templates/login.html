@@ -14,14 +14,13 @@
     max-width: 500px;
     margin: 4rem auto;
     background: rgba(10, 5, 15, 0.9);
-    border: 1px solid rgba(255, 0, 110, 0.3); /* Magenta border */
+    border: 1px solid rgba(255, 0, 110, 0.3);
     box-shadow: 0 0 30px rgba(255, 0, 110, 0.1);
     padding: 2.5rem;
     border-radius: 8px;
     position: relative;
   }
 
-  /* Magenta Cyber Corners */
   .auth-card::before {
     content: ""; position: absolute; top: -1px; left: -1px; width: 25px; height: 25px;
     border-top: 2px solid var(--magenta); border-left: 2px solid var(--magenta);
@@ -91,44 +90,43 @@
 
     {% include "components/errors.html" %}
 
+    <form method="post" accept-charset="utf-8">
+      <input type="hidden" name="nonce" value="{{ Session.nonce }}">
+
+      <div class="mb-3">
+        <b>
+          <label class="form-label" for="name">User Name or Email</label>
+          <span class="text-danger">*</span>
+        </b>
+        <input class="form-control" id="name" name="name" type="text" value="{{ name or '' }}" autocomplete="username email" required>
+      </div>
+
+      <div class="mb-4">
+        <b>
+          <label class="form-label" for="password">Password</label>
+          <span class="text-danger">*</span>
+        </b>
+        <input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+
+      <div class="row align-items-center">
+        <div class="col-7">
+          <a class="auth-link" href="{{ url_for('auth.reset_password') }}">
+            &gt; {% trans %}Forgot Password?{% endtrans %}
+          </a>
+        </div>
+        <div class="col-5">
+          <button type="submit" class="btn btn-magenta w-100 py-2">Authorize</button>
+        </div>
+      </div>
+    </form>
+
     {% if integrations.mlc() %}
+      <hr>
       <a class="btn btn-outline-info w-100 mb-3" href="{{ url_for('auth.oauth_login') }}">
         Login with Major League Cyber
       </a>
-      <hr>
     {% endif %}
-
-    {% with form = Forms.auth.LoginForm() %}
-      <form method="post" accept-charset="utf-8">
-        <div class="mb-3">
-          <b>
-            {{ form.name.label(class="form-label") }}
-            <span class="text-danger">*</span>
-          </b>
-          {{ form.name(class="form-control", value=name, autocomplete="username email") }}
-        </div>
-
-        <div class="mb-4">
-          <b>
-            {{ form.password.label(class="form-label") }}
-            <span class="text-danger">*</span>
-          </b>
-          {{ form.password(class="form-control", value=password, autocomplete="current-password") }}
-        </div>
-
-        <div class="row align-items-center">
-          <div class="col-7">
-            <a class="auth-link" href="{{ url_for('auth.reset_password') }}">
-              &gt; {% trans %}Forgot Password?{% endtrans %}
-            </a>
-          </div>
-          <div class="col-5">
-            {{ form.submit(class="btn btn-magenta w-100 py-2", value="Authorize") }}
-          </div>
-        </div>
-        {{ form.nonce() }}
-      </form>
-    {% endwith %}
 
     <div class="mt-4 text-center border-top pt-3" style="border-color: rgba(255, 0, 110, 0.1) !important;">
       <small class="text-muted">No account?</small>

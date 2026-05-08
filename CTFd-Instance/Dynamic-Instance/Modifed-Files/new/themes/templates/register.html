@@ -13,14 +13,13 @@
     max-width: 550px;
     margin: 4rem auto;
     background: rgba(10, 5, 15, 0.9);
-    border: 1px solid rgba(0, 245, 255, 0.3); /* Cyan Border */
+    border: 1px solid rgba(0, 245, 255, 0.3);
     padding: 2.5rem;
     border-radius: 8px;
     position: relative;
     box-shadow: 0 0 30px rgba(0, 245, 255, 0.1);
   }
 
-  /* Cyan Cyber Corners */
   .auth-card::before {
     content: ""; position: absolute; top: -1px; left: -1px; width: 25px; height: 25px;
     border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan);
@@ -44,7 +43,6 @@
     box-shadow: 0 0 12px rgba(0, 245, 255, 0.2);
   }
 
-  /* Solid Cyan Button Style */
   .btn-cyan {
     background: var(--cyan) !important;
     color: #000 !important;
@@ -74,45 +72,43 @@
 
     {% include "components/errors.html" %}
 
-    {% with form = Forms.auth.RegistrationForm() %}
-      {% from "macros/forms.html" import render_extra_fields %}
+    <form method="post" accept-charset="utf-8">
+      <input type="hidden" name="nonce" value="{{ Session.nonce }}">
 
-      <form method="post" accept-charset="utf-8">
-        <div class="mb-3">
-          <b>{{ form.name.label(class="form-label") }} <span class="text-danger">*</span></b>
-          {{ form.name(class="form-control", value=name, autocomplete="username") }}
-          <small class="form-text">Your codename on the system</small>
-        </div>
+      <div class="mb-3">
+        <b><label class="form-label" for="name">User Name</label> <span class="text-danger">*</span></b>
+        <input class="form-control" id="name" name="name" type="text" value="{{ name or '' }}" required>
+        <small class="form-text">Usernames cannot contain numbers.</small>
+      </div>
 
-        <div class="mb-3">
-          <b>{{ form.email.label(class="form-label") }} <span class="text-danger">*</span></b>
-          {{ form.email(class="form-control", value=email, autocomplete="email") }}
-          <small class="form-text">Used for encrypted communications only</small>
-        </div>
+      <div class="mb-3">
+        <b><label class="form-label" for="email">Email Address</label> <span class="text-danger">*</span></b>
+        <input class="form-control" id="email" name="email" type="email" value="{{ email or '' }}" required>
+        <small class="form-text">Must be an @aupp.edu.kh address.</small>
+      </div>
 
-        <div class="mb-3">
-          <b>{{ form.password.label(class="form-label") }} <span class="text-danger">*</span></b>
-          {{ form.password(class="form-control", value=password, autocomplete="new-password") }}
-        </div>
+      <div class="mb-3">
+        <b><label class="form-label" for="password">Password</label> <span class="text-danger">*</span></b>
+        <input class="form-control" id="password" name="password" type="password" required>
+        <small class="form-text">5-10 chars. Must include a symbol (!@#$%^&*).</small>
+      </div>
 
-        {{ render_extra_fields(form.extra) }}
-        {{ form.nonce() }}
-
-        <div class="mt-4">
-          {{ form.submit(class="btn btn-cyan w-100 py-2", value="Initialize Profile") }}
-        </div>
-
-        {% if Configs.tos_or_privacy %}
-          <div class="mt-4 text-center">
-            <small class="text-muted">
-              By initializing, you agree to the 
-              <a href="{{ Configs.privacy_link }}" target="_blank" style="color: var(--cyan)">Privacy Policy</a> 
-              and <a href="{{ Configs.tos_link }}" target="_blank" style="color: var(--cyan)">TOS</a>
-            </small>
+      {% if registration_fields %}
+        {% for field in registration_fields %}
+          <div class="mb-3">
+            <b><label class="form-label" for="fields[{{ field.id }}]">{{ field.name }}</label></b>
+            {% if field.description %}
+              <small class="d-block text-muted mb-1">{{ field.description }}</small>
+            {% endif %}
+            <input class="form-control" id="fields[{{ field.id }}]" name="fields[{{ field.id }}]" type="text">
           </div>
-        {% endif %}
-      </form>
-    {% endwith %}
+        {% endfor %}
+      {% endif %}
+
+      <div class="mt-4">
+        <button type="submit" class="btn btn-cyan w-100 py-2">Initialize Profile</button>
+      </div>
+    </form>
   </div>
 </div>
 {% endblock %}
