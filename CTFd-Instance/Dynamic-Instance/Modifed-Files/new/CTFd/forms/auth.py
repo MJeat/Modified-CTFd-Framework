@@ -28,8 +28,8 @@ def RegistrationForm(*args, **kwargs):
             description="Letters, numbers, and @ only",
             validators=[
                 InputRequired(),
-                # Filter: Only alphanumeric and @ allowed
-                Regexp(r'^[a-zA-Z0-9@]+$', message=_l("Username can only contain letters, numbers, and @"))
+				# STRICT REGEX: ONLY Letters and @. No numbers, no spaces, no other signs.
+                Regexp(r'^[a-zA-Z@]+$', message=_l("ONLY letters and @ allowed. No numbers."))
             ],
             render_kw={"autofocus": True},
         )
@@ -51,22 +51,28 @@ def RegistrationForm(*args, **kwargs):
 
         # Check if Username is taken
         def validate_name(self, field):
+            # Double check: ensure no digits are in the string at all
+            if any(char.isdigit() for char in field.data):
+                raise ValidationError(_l("Numbers are strictly prohibited in usernames."))
             if Users.query.filter_by(name=field.data).first():
                 raise ValidationError(_l("This username is already taken"))
 
         # Domain Filter & Check if Email is taken
         def validate_email(self, field):
-            if not field.data.lower().endswith("@aupp.edu.kh"):
-                raise ValidationError(_l("Registration restricted to @aupp.edu.kh emails only"))
+            # FORCE logic: convert to string, strip, and lowercase
+            val = str(field.data).strip().lower()
+            if not val.endswith("@aupp.edu.kh"):
+                # StopValidation prevents the form from even trying to hit the DB
+                raise StopValidation(_l("ONLY @aupp.edu.kh emails are accepted."))
             
-            if Users.query.filter_by(email=field.data).first():
+            if Users.query.filter_by(email=val).first():
                 raise ValidationError(_l("This email is already registered"))
 
         # Detect at least 1 symbol in password
         def validate_password(self, field):
-            if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", field.data):
+            # Password must contain at least one symbol
+            if not re.search(r"[!@#$%^&*,.]", field.data):
                 raise ValidationError(_l("Password must contain at least one symbol"))
-
         @property
         def extra(self):
             return (
