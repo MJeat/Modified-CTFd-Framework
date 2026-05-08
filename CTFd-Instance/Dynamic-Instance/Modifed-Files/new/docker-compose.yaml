@@ -20,7 +20,7 @@ services:
       # --- SESSION SECURITY (All of these below can be reconfigure in CTFd/config.py)
       # These below are basically variables for the config.py to function ---
       # Set a static secret key so nonces/sessions survive a restart. You can generate a 64-bits strings and store in .env during production
-      - SECRET_KEY=dsaiuhreiwhr2kn2wekfndlskKJdsl
+      - SECRET_KEY=dsaiuhreiwhr2kn2wekfndlskKJdsl       # Can create .env and store the key and can update this line to SECRET_KEY=${SERVER-SECRET-KEY}
       # Since you are using Nginx on port 80 (HTTP), keep SECURE=false
       - SESSION_COOKIE_SECURE=false      # Only =true when its in production with SSL/TLS or HTTPS. If you don't have HTTPS, set it to =false
       - SESSION_PERMANENT=True			 # If =False, your session will expire the moment you refresh browser or close the tab
