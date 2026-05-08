@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  :root {
+    --cyan: #00f5ff;
+    --magenta: #ff006e;
+    --dark-bg: #050208;
+  }
+
+  body { background-color: var(--dark-bg); }
+
+  .auth-card {
+    max-width: 500px;
+    margin: 4rem auto;
+    background: rgba(10, 5, 15, 0.9);
+    border: 1px solid rgba(255, 0, 110, 0.3); /* Magenta border */
+    box-shadow: 0 0 30px rgba(255, 0, 110, 0.1);
+    padding: 2.5rem;
+    border-radius: 8px;
+    position: relative;
+  }
+
+  /* Magenta Cyber Corners */
+  .auth-card::before {
+    content: ""; position: absolute; top: -1px; left: -1px; width: 25px; height: 25px;
+    border-top: 2px solid var(--magenta); border-left: 2px solid var(--magenta);
+  }
+  .auth-card::after {
+    content: ""; position: absolute; bottom: -1px; right: -1px; width: 25px; height: 25px;
+    border-bottom: 2px solid var(--magenta); border-right: 2px solid var(--magenta);
+  }
+
+  .terminal-header {
+    color: var(--magenta);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
+  }
+
+  .form-label { color: var(--magenta); font-family: var(--font-mono); font-size: 0.85rem; text-transform: uppercase; }
+  
+  .form-control {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 0, 110, 0.2) !important;
+    border-radius: 4px !important;
+    color: #fff !important;
+  }
+
+  .form-control:focus {
+    border-color: var(--magenta) !important;
+    box-shadow: 0 0 12px rgba(255, 0, 110, 0.2);
+  }
+
+  .btn-magenta {
+    background: var(--magenta) !important;
+    color: #000 !important;
+    font-weight: 700;
+    border: none;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: all 0.2s ease;
+  }
+
+  .btn-magenta:hover {
+    background: #ff2d85 !important;
+    box-shadow: 0 0 20px rgba(255, 0, 110, 0.45);
+    transform: translateY(-1px);
+  }
+
+  .auth-link {
+    color: var(--magenta);
+    font-size: 0.85rem;
+    text-decoration: none;
+    opacity: 0.8;
+  }
+
+  .auth-link:hover { opacity: 1; text-decoration: underline; color: #fff; }
+
+  hr { border-color: rgba(255, 0, 110, 0.1); }
+</style>
+
+<div class="container">
+  <div class="auth-card">
+    <div class="text-center mb-4">
+      <h2 class="terminal-header">{% trans %}LOGIN{% endtrans %}</h2>
+      <small class="text-muted d-block mt-2">-- RESTRICTED ACCESS --</small>
+    </div>
+
+    {% include "components/errors.html" %}
+
+    {% if integrations.mlc() %}
+      <a class="btn btn-outline-info w-100 mb-3" href="{{ url_for('auth.oauth_login') }}">
+        Login with Major League Cyber
+      </a>
+      <hr>
+    {% endif %}
+
+    {% with form = Forms.auth.LoginForm() %}
+      <form method="post" accept-charset="utf-8">
+        <div class="mb-3">
+          <b>
+            {{ form.name.label(class="form-label") }}
+            <span class="text-danger">*</span>
+          </b>
+          {{ form.name(class="form-control", value=name, autocomplete="username email") }}
+        </div>
+
+        <div class="mb-4">
+          <b>
+            {{ form.password.label(class="form-label") }}
+            <span class="text-danger">*</span>
+          </b>
+          {{ form.password(class="form-control", value=password, autocomplete="current-password") }}
+        </div>
+
+        <div class="row align-items-center">
+          <div class="col-7">
+            <a class="auth-link" href="{{ url_for('auth.reset_password') }}">
+              &gt; {% trans %}Forgot Password?{% endtrans %}
+            </a>
+          </div>
+          <div class="col-5">
+            {{ form.submit(class="btn btn-magenta w-100 py-2", value="Authorize") }}
+          </div>
+        </div>
+        {{ form.nonce() }}
+      </form>
+    {% endwith %}
+
+    <div class="mt-4 text-center border-top pt-3" style="border-color: rgba(255, 0, 110, 0.1) !important;">
+      <small class="text-muted">No account?</small>
+      <a href="{{ url_for('auth.register') }}" style="color: var(--cyan); text-decoration:none; font-size: 0.85rem;">Register Agent</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
