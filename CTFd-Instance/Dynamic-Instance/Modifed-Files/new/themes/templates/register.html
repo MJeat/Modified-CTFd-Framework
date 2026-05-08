@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  :root {
+    --cyan: #00f5ff;
+    --magenta: #ff006e;
+    --dark-bg: #050208;
+  }
+  body { background-color: var(--dark-bg); }
+
+  .auth-card {
+    max-width: 550px;
+    margin: 4rem auto;
+    background: rgba(10, 5, 15, 0.9);
+    border: 1px solid rgba(0, 245, 255, 0.3); /* Cyan Border */
+    padding: 2.5rem;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 0 30px rgba(0, 245, 255, 0.1);
+  }
+
+  /* Cyan Cyber Corners */
+  .auth-card::before {
+    content: ""; position: absolute; top: -1px; left: -1px; width: 25px; height: 25px;
+    border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan);
+  }
+  .auth-card::after {
+    content: ""; position: absolute; bottom: -1px; right: -1px; width: 25px; height: 25px;
+    border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan);
+  }
+
+  .terminal-header { color: var(--cyan); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+  .form-label { color: var(--cyan); font-family: var(--font-mono); font-size: 0.85rem; text-transform: uppercase; }
+  
+  .form-control {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(0, 245, 255, 0.2) !important;
+    color: #fff !important;
+  }
+
+  .form-control:focus {
+    border-color: var(--cyan) !important;
+    box-shadow: 0 0 12px rgba(0, 245, 255, 0.2);
+  }
+
+  /* Solid Cyan Button Style */
+  .btn-cyan {
+    background: var(--cyan) !important;
+    color: #000 !important;
+    font-weight: 700;
+    border: none;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: all 0.2s ease;
+  }
+
+  .btn-cyan:hover {
+    background: #00e0ff !important;
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .form-text { color: rgba(0, 245, 255, 0.5) !important; font-size: 0.75rem; }
+</style>
+
+<div class="container">
+  <div class="auth-card">
+    <div class="text-center mb-4">
+      <h2 class="terminal-header">{% trans %}REGISTER{% endtrans %}</h2>
+      <small class="text-muted d-block mt-2">-- RECRUITMENT PROTOCOL --</small>
+    </div>
+
+    {% include "components/errors.html" %}
+
+    {% with form = Forms.auth.RegistrationForm() %}
+      {% from "macros/forms.html" import render_extra_fields %}
+
+      <form method="post" accept-charset="utf-8">
+        <div class="mb-3">
+          <b>{{ form.name.label(class="form-label") }} <span class="text-danger">*</span></b>
+          {{ form.name(class="form-control", value=name, autocomplete="username") }}
+          <small class="form-text">Your codename on the system</small>
+        </div>
+
+        <div class="mb-3">
+          <b>{{ form.email.label(class="form-label") }} <span class="text-danger">*</span></b>
+          {{ form.email(class="form-control", value=email, autocomplete="email") }}
+          <small class="form-text">Used for encrypted communications only</small>
+        </div>
+
+        <div class="mb-3">
+          <b>{{ form.password.label(class="form-label") }} <span class="text-danger">*</span></b>
+          {{ form.password(class="form-control", value=password, autocomplete="new-password") }}
+        </div>
+
+        {{ render_extra_fields(form.extra) }}
+        {{ form.nonce() }}
+
+        <div class="mt-4">
+          {{ form.submit(class="btn btn-cyan w-100 py-2", value="Initialize Profile") }}
+        </div>
+
+        {% if Configs.tos_or_privacy %}
+          <div class="mt-4 text-center">
+            <small class="text-muted">
+              By initializing, you agree to the 
+              <a href="{{ Configs.privacy_link }}" target="_blank" style="color: var(--cyan)">Privacy Policy</a> 
+              and <a href="{{ Configs.tos_link }}" target="_blank" style="color: var(--cyan)">TOS</a>
+            </small>
+          </div>
+        {% endif %}
+      </form>
+    {% endwith %}
+  </div>
+</div>
+{% endblock %}
