@@ -531,11 +531,23 @@ def read(challenge):
         # Use SECURE hints list
         'hints': secure_hints,
 
-        'type_data': {
-            'id': DockerChallengeType.id,
-            'name': DockerChallengeType.name,
-            'templates': DockerChallengeType.templates,
-            'scripts': DockerChallengeType.scripts,
+		# --- SECURITY HARDENING ---
+		# We no longer expose internal plugin asset paths to normal users.
+		# This reduces infrastructure fingerprinting and plugin enumeration.
+		#
+		# Admins still receive full data for debugging/admin UI purposes.
+		if is_admin():
+			type_data = {
+				'id': DockerChallengeType.id,
+				'name': DockerChallengeType.name,
+				'templates': DockerChallengeType.templates,
+				'scripts': DockerChallengeType.scripts,
+			}
+		else:
+			type_data = {
+				'id': DockerChallengeType.id,
+				'name': DockerChallengeType.name,
+			}
         }
     }
 
