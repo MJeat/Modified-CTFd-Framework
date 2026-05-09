@@ -167,6 +167,11 @@ class ServerConfig(object):
     SESSION_COOKIE_HTTPONLY: bool = process_boolean_str(
         os.getenv("SESSION_COOKIE_HTTPONLY", config_ini["security"].get("SESSION_COOKIE_HTTPONLY", "True"))
     )
+    
+    # Session Secure cookie. This is connected to docker-compose.yaml
+    SESSION_COOKIE_SECURE: bool = process_boolean_str(
+        os.getenv("SESSION_COOKIE_SECURE", config_ini["security"].get("SESSION_COOKIE_SECURE", "False"))
+    )
 
     # Check Environment Variable first, then config.ini, then default to Lax
     SESSION_COOKIE_SAMESITE: str = os.getenv(
@@ -262,7 +267,8 @@ class ServerConfig(object):
         AWS_S3_ADDRESSING_STYLE: str = empty_str_cast(config_ini["uploads"].get("AWS_S3_ADDRESSING_STYLE", ""), default="auto")
 
     # === OPTIONAL ===
-    REVERSE_PROXY: Union[str, bool] = empty_str_cast(config_ini["optional"]["REVERSE_PROXY"], default=False)
+    # REVERSE_PROXY: Union[str, bool] = empty_str_cast(config_ini["optional"]["REVERSE_PROXY"], default=False)
+    REVERSE_PROXY: Union[str, bool] = os.getenv("REVERSE_PROXY") or empty_str_cast(config_ini["optional"]["REVERSE_PROXY"], default=False)
 
     TEMPLATES_AUTO_RELOAD: bool = process_boolean_str(empty_str_cast(config_ini["optional"]["TEMPLATES_AUTO_RELOAD"], default=True))
 
