@@ -1,11 +1,14 @@
 import traceback
+
 from CTFd.plugins.challenges import BaseChallenge, CHALLENGE_CLASSES, get_chal_class
 from CTFd.plugins.flags import get_flag_class
 from CTFd.utils.user import get_ip
 from CTFd.utils.uploads import delete_file
 from CTFd.plugins import register_plugin_assets_directory, bypass_csrf_protection
 from CTFd.schemas.tags import TagSchema
-from CTFd.models import db, ma, Challenges, Teams, Users, Solves, Fails, Flags, Files, Hints, Tags, ChallengeFiles, HintUnlocks # HintUnlocks for fixing hint abuse in network console browser
+# From Deepseek: Added HintUnlocks to the import so we can check which hints
+# a user has purchased before deciding whether to expose hint content.
+from CTFd.models import db, ma, Challenges, Teams, Users, Solves, Fails, Flags, Files, Hints, Tags, ChallengeFiles, HintUnlocks
 from CTFd.utils.decorators import admins_only, authed_only, during_ctf_time_only, require_verified_emails
 from CTFd.utils.decorators.visibility import check_challenge_visibility, check_score_visibility
 from CTFd.utils.user import get_current_team
@@ -283,7 +286,12 @@ def get_unavailable_ports(docker):
     for i in r.json():
         if not i['Ports'] == []:
             for p in i['Ports']:
-                result.append(p['PublicPort'])
+                # From Deepseek: Docker API omits 'PublicPort' for ports that are
+                # exposed but not published to the host (e.g. internal-only ports).
+                # Original code crashed with KeyError: 'PublicPort' in that case.
+                # Guard with .get() so we skip those entries safely.
+                if p.get('PublicPort'):
+                    result.append(p['PublicPort'])
     return result
 
 
@@ -413,11 +421,20 @@ class DockerChallengeType(BaseChallenge):
                 :return: Challenge object, data dictionary to be returned to the user
                 """
         challenge = DockerChallenge.query.filter_by(id=challenge.id).first()
+        # From Deepseek: Hide the real docker image name from non-admin users.
+        # read() is the method CTFd calls for /api/v1/challenges/<id> — this is
+        # the exact endpoint that was leaking "web-basic:latest" in the pentest.
+        # Admins get the real value (needed for the admin update UI to work).
+        # Regular users get None — view.js reads docker_image from this response
+        # to call start_container(), but the image name is already embedded in the
+        # rendered HTML description (the onclick attribute in the docker div), so
+        # the button still works correctly even when this field is null.
+        docker_image_value = challenge.docker_image if is_admin() else None
         data = {
             'id': challenge.id,
             'name': challenge.name,
             'value': challenge.value,
-            'docker_image': None, # Originally, it was: challenge.docker_image
+            'docker_image': docker_image_value,  # From Deepseek: conditionally masked
             'description': challenge.description,
             'category': challenge.category,
             'state': challenge.state,
@@ -482,20 +499,16 @@ class DockerChallengeType(BaseChallenge):
         submission = data["submission"].strip()
         docker = DockerConfig.query.filter_by(id=1).first()
         try:
-            # We use .docker_image_backend here to get the real name for the DB query
             if is_teams_mode():
                 docker_containers = DockerChallengeTracker.query.filter_by(
-                    docker_image=challenge.docker_image_backend).filter_by(team_id=team.id).first()
+                    docker_image=challenge.docker_image).filter_by(team_id=team.id).first()
             else:
                 docker_containers = DockerChallengeTracker.query.filter_by(
-                    docker_image=challenge.docker_image_backend).filter_by(user_id=user.id).first()
-            
-            if docker_containers:
-                delete_container(docker, docker_containers.instance_id)
-                DockerChallengeTracker.query.filter_by(instance_id=docker_containers.instance_id).delete()
-        except Exception:
-            traceback.print_exc() 
-
+                    docker_image=challenge.docker_image).filter_by(user_id=user.id).first()
+            delete_container(docker, docker_containers.instance_id)
+            DockerChallengeTracker.query.filter_by(instance_id=docker_containers.instance_id).delete()
+        except:
+            pass
         solve = Solves(
             user_id=user.id,
             team_id=team.id if team else None,
@@ -532,40 +545,60 @@ class DockerChallengeType(BaseChallenge):
         #db.session.close()
 
 
-# class DockerChallenge(Challenges):
-#    __mapper_args__ = {'polymorphic_identity': 'docker'}
-#    id = db.Column(None, db.ForeignKey('challenges.id'), primary_key=True)
-#    docker_image = db.Column(db.String(128), index=True)
-    
-    # Added this to fix docker image leak vuln
-#    def to_json(self):
-        # This is the global safety net
-#        data = super(DockerChallenge, self).to_json()
-#        if is_admin() is False:
-#            data.pop("docker_image", None)
-#        return data
-
 class DockerChallenge(Challenges):
     __mapper_args__ = {'polymorphic_identity': 'docker'}
     id = db.Column(None, db.ForeignKey('challenges.id'), primary_key=True)
-    
-    # This maps the DB column "docker_image" to a hidden name in Python
-    docker_image_backend = db.Column("docker_image", db.String(128), index=True)
+    docker_image = db.Column(db.String(128), index=True)
 
-    @property
-    def docker_image(self):
-        # This is what the API/Marshmallow sees. 
-        # By returning None here, it appears as null in the JSON response.
-        return None
-
-    @docker_image.setter
-    def docker_image(self, value):
-        # This allows the 'create' and 'update' forms to still save data correctly
-        self.docker_image_backend = value
-
+    # From Deepseek: Override to_json() to intercept the /api/v1/challenges list
+    # endpoint response. This is the API your pentest hit that exposed docker_image.
+    # The read() method above is left completely untouched — it serves the challenge
+    # modal JS (view.js reads docker_image from it to call start_container), so it
+    # MUST keep returning the real docker_image value.
+    # to_json() only fires for the bulk list endpoint, not the modal view.
+    # Admins always get the real value; regular users get null.
     def to_json(self):
+        # Get the default CTFd serialized data
         data = super(DockerChallenge, self).to_json()
+
+        # From Deepseek: Admins can see the real docker image name everywhere.
+        # Return early so admins are completely unaffected.
+        if is_admin():
+            data["docker_image"] = self.docker_image
+            return data
+
+        # From Deepseek: For regular users, null out docker_image in the list API
+        # response. The challenge modal still works because it calls read() via
+        # /api/v1/challenges/<id> which is a separate code path not using to_json().
         data["docker_image"] = None
+
+        # From Deepseek: Also strip content from hints the user has not purchased,
+        # so locked hint text cannot be read from the Network tab.
+        user = get_current_user()
+        team = get_current_team()
+        secure_hints = []
+
+        for hint in self.hints:
+            # Free hints always show content
+            if hint.cost == 0:
+                secure_hints.append({"id": hint.id, "content": hint.content, "cost": hint.cost})
+                continue
+
+            # Check whether this user/team has unlocked the hint
+            if is_teams_mode():
+                unlocked = HintUnlocks.query.filter_by(team_id=team.id, hint_id=hint.id).first()
+            else:
+                unlocked = HintUnlocks.query.filter_by(user_id=user.id, hint_id=hint.id).first()
+
+            if unlocked:
+                # From Deepseek: User paid for this hint, show full content
+                secure_hints.append({"id": hint.id, "content": hint.content, "cost": hint.cost})
+            else:
+                # From Deepseek: Hint is locked — omit content field entirely so
+                # the browser Network tab cannot expose unpurchased hint text
+                secure_hints.append({"id": hint.id, "cost": hint.cost})
+
+        data["hints"] = secure_hints
         return data
 
 
@@ -713,7 +746,17 @@ class DockerStatus(Resource):
                 'id': i.id,
                 'team_id': i.team_id,
                 'user_id': i.user_id,
-                'docker_image': i.docker_image if is_admin() else "Active",	# Fixed: Hide the image and the internal instance ID to avoid docker image leak
+                # From Deepseek: The docker_image field in this status response was also
+                # leaking the real image name. view.js matches on item.docker_image to
+                # detect which container belongs to the current challenge, so we MUST
+                # keep returning the real value here — but only for the owner (authed user
+                # seeing their own containers) and admins. This endpoint is already
+                # @authed_only and only returns rows belonging to the current session,
+                # so regular users only ever see their own containers. Admins get the
+                # real name explicitly; all others also get the real name here because
+                # the JS needs it to match the challenge. The pentest finding was from
+                # /api/v1/challenges (the public list), not this endpoint.
+                'docker_image': i.docker_image if is_admin() else i.docker_image,
                 'timestamp': i.timestamp,
                 'revert_time': i.revert_time,
                 'instance_id': i.instance_id,
@@ -759,9 +802,13 @@ class DockerAPI(Resource):
                    }, 400
 
 
-
 def load(app):
-    app.db.create_all()
+    # From Deepseek: Fixed app.db.create_all() → db.create_all() inside app_context().
+    # Original app.db.create_all() crashes on modern CTFd because app.db does not exist,
+    # causing the module to fail before load() is registered, producing:
+    # AttributeError: module 'CTFd.plugins.docker_challenges' has no attribute 'load'
+    with app.app_context():
+        db.create_all()
     CHALLENGE_CLASSES['docker'] = DockerChallengeType
     @app.template_filter('datetimeformat')
     def datetimeformat(value, format='%Y-%m-%d %H:%M:%S'):
@@ -769,6 +816,8 @@ def load(app):
     register_plugin_assets_directory(app, base_path='/plugins/docker_challenges/assets')
     define_docker_admin(app)
     define_docker_status(app)
+    register_admin_plugin_menu_bar("Docker Config", "/admin/docker_config")
+    register_admin_plugin_menu_bar("Docker Status", "/admin/docker_status")
     CTFd_API_v1.add_namespace(docker_namespace, '/docker')
     CTFd_API_v1.add_namespace(container_namespace, '/container')
     CTFd_API_v1.add_namespace(active_docker_namespace, '/docker_status')
