@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 <style>
   :root {
@@ -11,37 +10,64 @@
 
   .auth-card {
     max-width: 550px;
-    margin: 4rem auto;
-    background: rgba(10, 5, 15, 0.9);
-    border: 1px solid rgba(0, 245, 255, 0.3);
+    margin: 3rem auto;
+    background: rgba(10, 5, 15, 0.92);
+    border: 1px solid rgba(0, 245, 255, 0.25);
     padding: 2.5rem;
     border-radius: 8px;
     position: relative;
-    box-shadow: 0 0 30px rgba(0, 245, 255, 0.1);
+    box-shadow: 0 0 40px rgba(0, 245, 255, 0.08);
   }
-
+  /* Corner brackets */
   .auth-card::before {
-    content: ""; position: absolute; top: -1px; left: -1px; width: 25px; height: 25px;
+    content: ""; position: absolute; top: -1px; left: -1px;
+    width: 22px; height: 22px;
     border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan);
   }
   .auth-card::after {
-    content: ""; position: absolute; bottom: -1px; right: -1px; width: 25px; height: 25px;
+    content: ""; position: absolute; bottom: -1px; right: -1px;
+    width: 22px; height: 22px;
     border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan);
   }
 
-  .terminal-header { color: var(--cyan); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
-  .form-label { color: var(--cyan); font-family: var(--font-mono); font-size: 0.85rem; text-transform: uppercase; }
-  
-  .form-control {
-    background: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid rgba(0, 245, 255, 0.2) !important;
-    color: #fff !important;
+  .terminal-header {
+    color: var(--cyan);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
   }
-
+  .form-label {
+    color: var(--cyan);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+  }
+  .form-control {
+    background: rgba(0, 245, 255, 0.03) !important;
+    border: 1px solid rgba(0, 245, 255, 0.18) !important;
+    border-radius: 4px !important;
+    color: #fff !important;
+    padding: 0.55rem 0.75rem;
+  }
   .form-control:focus {
     border-color: var(--cyan) !important;
-    box-shadow: 0 0 12px rgba(0, 245, 255, 0.2);
+    box-shadow: 0 0 10px rgba(0, 245, 255, 0.15) !important;
+    background: rgba(0, 245, 255, 0.05) !important;
   }
+  .form-control::placeholder { color: rgba(255,255,255,0.25) !important; }
+
+  /* Style the registration_code and bracket fields rendered by render_extra_fields */
+  .form-control option { background: #0a050f; color: #fff; }
+  select.form-control { cursor: pointer; }
+
+  .form-text {
+    color: rgba(0, 245, 255, 0.45) !important;
+    font-size: 0.72rem;
+    margin-top: 0.25rem;
+  }
+  .text-danger { color: #ff4466 !important; }
 
   .btn-cyan {
     background: var(--cyan) !important;
@@ -53,62 +79,101 @@
     letter-spacing: 0.08em;
     transition: all 0.2s ease;
   }
-
   .btn-cyan:hover {
     background: #00e0ff !important;
-    box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.35);
     transform: translateY(-1px);
   }
 
-  .form-text { color: rgba(0, 245, 255, 0.5) !important; font-size: 0.75rem; }
+  .divider {
+    border-color: rgba(0, 245, 255, 0.12);
+    margin: 1.2rem 0;
+  }
+
+  /* Make render_extra_fields labels match our theme */
+  .auth-card label { color: var(--cyan) !important; font-size: 0.8rem; text-transform: uppercase; }
+  .auth-card .form-group { margin-bottom: 1rem; }
 </style>
 
 <div class="container">
   <div class="auth-card">
+
     <div class="text-center mb-4">
       <h2 class="terminal-header">{% trans %}REGISTER{% endtrans %}</h2>
-      <small class="text-muted d-block mt-2">-- RECRUITMENT PROTOCOL --</small>
+      <small class="text-muted d-block mt-1">-- RECRUITMENT PROTOCOL --</small>
     </div>
 
     {% include "components/errors.html" %}
 
-    <form method="post" accept-charset="utf-8">
-      <input type="hidden" name="nonce" value="{{ Session.nonce }}">
+    {% if integrations.mlc() %}
+      <a class="btn btn-secondary btn-lg btn-block w-100 mb-3" href="{{ url_for('auth.oauth_login') }}">
+        Login with Major League Cyber
+      </a>
+      <hr class="divider">
+    {% endif %}
 
-      <div class="mb-3">
-        <b><label class="form-label" for="name">User Name</label> <span class="text-danger">*</span></b>
-        <input class="form-control" id="name" name="name" type="text" value="{{ name or '' }}" required>
-        <small class="form-text">Usernames cannot contain numbers.</small>
-      </div>
+    {% with form = Forms.auth.RegistrationForm() %}
+      {% from "macros/forms.html" import render_extra_fields %}
 
-      <div class="mb-3">
-        <b><label class="form-label" for="email">Email Address</label> <span class="text-danger">*</span></b>
-        <input class="form-control" id="email" name="email" type="email" value="{{ email or '' }}" required>
-        <small class="form-text">Must be an @aupp.edu.kh address.</small>
-      </div>
+      <form method="post" accept-charset="utf-8">
+        {{ form.nonce() }}
 
-      <div class="mb-3">
-        <b><label class="form-label" for="password">Password</label> <span class="text-danger">*</span></b>
-        <input class="form-control" id="password" name="password" type="password" required>
-        <small class="form-text">5-10 chars. Must include a symbol (!@#$%^&*).</small>
-      </div>
+        <div class="mb-3">
+          <b><label class="form-label" for="name">User Name</label> <span class="text-danger">*</span></b>
+          <input class="form-control" id="name" name="name" type="text"
+                 value="{{ name or '' }}" autocomplete="username" required>
+          <small class="form-text">Username — no numbers allowed.</small>
+        </div>
 
-      {% if registration_fields %}
-        {% for field in registration_fields %}
-          <div class="mb-3">
-            <b><label class="form-label" for="fields[{{ field.id }}]">{{ field.name }}</label></b>
-            {% if field.description %}
-              <small class="d-block text-muted mb-1">{{ field.description }}</small>
-            {% endif %}
-            <input class="form-control" id="fields[{{ field.id }}]" name="fields[{{ field.id }}]" type="text">
+        <div class="mb-3">
+          <b><label class="form-label" for="email">Email Address</label> <span class="text-danger">*</span></b>
+          <input class="form-control" id="email" name="email" type="email"
+                 value="{{ email or '' }}" autocomplete="email" required>
+          <small class="form-text">Must be an @aupp.edu.kh address.</small>
+        </div>
+
+        <div class="mb-3">
+          <b><label class="form-label" for="password">Password</label> <span class="text-danger">*</span></b>
+          <input class="form-control" id="password" name="password" type="password"
+                 autocomplete="new-password" required>
+          <small class="form-text">5–10 characters. Must include a symbol: ! @ # $ % ^ & *</small>
+        </div>
+
+        {#
+          render_extra_fields(form.extra) renders THREE things in order:
+            1. Any custom user fields the admin added in CTFd settings
+            2. The registration code input (if admin has set a registration_code)
+            3. The bracket selector (if admin has configured brackets)
+          Without this line, the registration code box never appears.
+        #}
+        {{ render_extra_fields(form.extra) }}
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-cyan w-100 py-2">
+            Initialize Profile
+          </button>
+        </div>
+
+        {% if Configs.tos_or_privacy %}
+          <div class="text-center mt-3">
+            <small class="form-text">
+              {% trans trimmed privacy_link=Configs.privacy_link, tos_link=Configs.tos_link %}
+              By registering, you agree to the
+              <a href="{{ privacy_link }}" target="_blank" style="color:var(--cyan);">privacy policy</a>
+              and <a href="{{ tos_link }}" target="_blank" style="color:var(--cyan);">terms of service</a>.
+              {% endtrans %}
+            </small>
           </div>
-        {% endfor %}
-      {% endif %}
+        {% endif %}
 
-      <div class="mt-4">
-        <button type="submit" class="btn btn-cyan w-100 py-2">Initialize Profile</button>
-      </div>
-    </form>
+      </form>
+    {% endwith %}
+
+    <div class="mt-4 text-center border-top pt-3" style="border-color: rgba(0,245,255,0.1) !important;">
+      <small class="text-muted">Already registered?</small>
+      <a href="{{ url_for('auth.login') }}" style="color: var(--cyan); font-size: 0.85rem; text-decoration: none;"> Login</a>
+    </div>
+
   </div>
 </div>
 {% endblock %}
