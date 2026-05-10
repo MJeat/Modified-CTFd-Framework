@@ -10,7 +10,6 @@ from CTFd.exceptions.email import (
     UserConfirmTokenInvalidException,
     UserResetPasswordTokenInvalidException,
 )
-from CTFd.forms.auth import LoginForm, RegistrationForm
 from CTFd.models import Brackets, Teams, UserFieldEntries, UserFields, Users, db
 from CTFd.utils import config, email, get_app_config, get_config
 from CTFd.utils import user as current_user
@@ -244,216 +243,143 @@ def register():
             description=f"Reached the maximum number of users ({num_users_limit}).",
         )
 
-    # Use the WTF form object so form.nonce() in the template and validate() here
-    # share the same token — no separate manual nonce check needed.
-    form = RegistrationForm()
-
     if request.method == "POST":
-        if form.validate():
-            name = form.name.data.strip()
-            email_address = form.email.data.strip().lower()
-            password = form.password.data.strip()
+        # --- CSRF/NONCE SECURITY CHECK ---
+        nonce = request.form.get("nonce")
+        if nonce != session.get("nonce"):
+            errors.append(_l("Invalid Security Token. Please refresh and try again."))
+            return render_template(
+                "register.html", 
+                errors=errors, 
+                registration_fields=UserFields.query.all()
+            )
 
-            website = request.form.get("website")
-            affiliation = request.form.get("affiliation")
-            country = request.form.get("country")
-            registration_code = str(request.form.get("registration_code", ""))
-            bracket_id = request.form.get("bracket_id", None)
+        name = request.form.get("name", "").strip()
+        email_address = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "").strip()
+        website = request.form.get("website")
+        affiliation = request.form.get("affiliation")
+        country = request.form.get("country")
+        registration_code = str(request.form.get("registration_code", ""))
+        bracket_id = request.form.get("bracket_id", None)
 
-            # --- CUSTOM SECURITY CHECKS ---
-            if not email_address.endswith("@aupp.edu.kh"):
-                errors.append(_l("Only @aupp.edu.kh email addresses are allowed."))
-            if any(char.isdigit() for char in name):
-                errors.append(_l("Usernames cannot contain numbers."))
-            if not re.search(r"[!@#$%^&*]", password):
-                errors.append(_l("Password must contain at least one symbol (!@#$%^&*)."))
-            if len(password) < 5 or len(password) > 10:
-                errors.append(_l("Password must be between 5 and 10 characters."))
+        # Validation Logic
+        name_len = len(name) == 0
+        names = Users.query.add_columns(Users.name, Users.id).filter_by(name=name).first()
+        emails = Users.query.add_columns(Users.email, Users.id).filter_by(email=email_address).first()
+        pass_short = len(password) == 0
+        pass_long = len(password) > 128
+        valid_email = validators.validate_email(email_address)
+        
+        # --- CUSTOM SECURITY CHECKS ---
+        if not email_address.endswith("@aupp.edu.kh"):
+            errors.append(_l("Only @aupp.edu.kh email addresses are allowed."))
+        if any(char.isdigit() for char in name):
+            errors.append(_l("Usernames cannot contain numbers."))
+        if not re.search(r"[!@#$%^&*]", password):
+            errors.append(_l("Password must contain at least one symbol (!@#$%^&*)."))
+        if len(password) < 5 or len(password) > 10:
+            errors.append(_l("Password must be between 5 and 10 characters."))
 
-            # Standard CTFd checks
-            name_len = len(name) == 0
-            names = Users.query.add_columns(Users.name, Users.id).filter_by(name=name).first()
-            emails = Users.query.add_columns(Users.email, Users.id).filter_by(email=email_address).first()
-            pass_short = len(password) == 0
-            pass_long = len(password) > 128
-            valid_email = validators.validate_email(email_address)
-            team_name_email_check = validators.validate_email(name)
+        password_min_length = int(get_config("password_min_length", default=0))
+        pass_min = len(password) < password_min_length
 
-            password_min_length = int(get_config("password_min_length", default=0))
-            pass_min = len(password) < password_min_length
+        if get_config("registration_code"):
+            if registration_code.lower() != str(get_config("registration_code", default="")).lower():
+                errors.append(_l("The registration code you entered was incorrect"))
 
-            if get_config("registration_code"):
-                if registration_code.lower() != str(get_config("registration_code", default="")).lower():
-                    errors.append(_l("The registration code you entered was incorrect"))
+        # Process custom user fields
+        fields = {field.id: field for field in UserFields.query.all()}
+        entries = {}
+        for field_id, field in fields.items():
+            value = request.form.get(f"fields[{field_id}]", "").strip()
+            if field.required is True and not value:
+                errors.append(_l("Please provide all required fields"))
+                break
+            entries[field_id] = bool(value) if field.field_type == "boolean" else value
 
-            if email.check_email_is_whitelisted(email_address) is False:
-                errors.append(_l("Your email address is not from an allowed domain"))
-            if email.check_email_is_blacklisted(email_address) is True:
-                errors.append(_l("Your email address is not from an allowed domain"))
+        # standard CTFd validations
+        if not valid_email: errors.append(_l("Please enter a valid email address"))
+        if names: errors.append(_l("That user name is already taken"))
+        if emails: errors.append(_l("That email has already been used"))
+        if pass_short or (password_min_length and pass_min): errors.append(_l("Pick a longer password"))
+        if pass_long: errors.append(_l("Pick a shorter password"))
+        if name_len: errors.append(_l("Pick a longer user name"))
 
-            # Process custom user fields
-            fields = {field.id: field for field in UserFields.query.all()}
-            entries = {}
-            for field_id, field in fields.items():
-                value = request.form.get(f"fields[{field_id}]", "").strip()
-                if field.required is True and not value:
-                    errors.append(_l("Please provide all required fields"))
-                    break
-                entries[field_id] = bool(value) if field.field_type == "boolean" else value
-
-            if country:
-                try:
-                    validators.validate_country_code(country)
-                    valid_country = True
-                except ValidationError:
-                    valid_country = False
-            else:
-                valid_country = True
-
-            if website:
-                valid_website = validators.validate_url(website)
-            else:
-                valid_website = True
-
-            if affiliation:
-                valid_affiliation = len(affiliation) < 128
-            else:
-                valid_affiliation = True
-
-            if bracket_id:
-                valid_bracket = bool(Brackets.query.filter_by(id=bracket_id, type="users").first())
-            else:
-                valid_bracket = True if not Brackets.query.filter_by(type="users").count() else False
-
-            if not valid_email:
-                errors.append(_l("Please enter a valid email address"))
-            if names:
-                errors.append(_l("That user name is already taken"))
-            if team_name_email_check is True:
-                errors.append(_l("Your user name cannot be an email address"))
-            if emails:
-                errors.append(_l("That email has already been used"))
-            if pass_short:
-                errors.append(_l("Pick a longer password"))
-            if password_min_length and pass_min:
-                errors.append(_l(f"Password must be at least {password_min_length} characters"))
-            if pass_long:
-                errors.append(_l("Pick a shorter password"))
-            if name_len:
-                errors.append(_l("Pick a longer user name"))
-            if valid_website is False:
-                errors.append(_l("Websites must be a proper URL starting with http or https"))
-            if valid_country is False:
-                errors.append(_l("Invalid country"))
-            if valid_affiliation is False:
-                errors.append(_l("Please provide a shorter affiliation"))
-            if valid_bracket is False:
-                errors.append(_l("Please provide a valid bracket"))
-
-            if len(errors) > 0:
-                return render_template("register.html", errors=errors, form=form)
-
-            try:
-                user = Users(
-                    name=name,
-                    email=email_address,
-                    password=password,
-                    bracket_id=bracket_id,
-                )
-                if website: user.website = website
-                if affiliation: user.affiliation = affiliation
-                if country: user.country = country
-
-                db.session.add(user)
-                db.session.commit()
-
-                for field_id, value in entries.items():
-                    db.session.add(UserFieldEntries(field_id=field_id, value=value, user_id=user.id))
-                db.session.commit()
-
-                login_user(user)
-                log(
-                    "registrations",
-                    format="[{date}] {ip} - {name} registered with {email}",
-                    name=user.name,
-                    email=user.email,
-                )
-
-                if request.args.get("next") and validators.is_safe_url(request.args.get("next")):
-                    return redirect(request.args.get("next"))
-
-                if config.can_send_mail() and get_config("verify_emails"):
-                    email.verify_email_address(user.email)
-                    db.session.close()
-                    return redirect(url_for("auth.confirm"))
-                else:
-                    if config.can_send_mail():
-                        email.successful_registration_notification(user.email)
-
-                db.session.close()
-
-                if is_teams_mode():
-                    return redirect(url_for("teams.private"))
-
-                return redirect(url_for("challenges.listing"))
-
-            except Exception:
-                db.session.rollback()
-                errors.append(_l("An error occurred during registration."))
-                return render_template("register.html", errors=errors, form=form)
+        if len(errors) > 0:
+            return render_template(
+                "register.html",
+                errors=errors,
+                name=name,
+                email=email_address,
+                registration_fields=UserFields.query.all()
+            )
         else:
-            # form.validate() failed — WTF caught nonce/field errors
-            return render_template("register.html", errors=errors, form=form)
+            user = Users(name=name, email=email_address, password=password, bracket_id=bracket_id)
+            if website: user.website = website
+            if affiliation: user.affiliation = affiliation
+            if country: user.country = country
+            db.session.add(user)
+            db.session.commit()
+
+            for field_id, value in entries.items():
+                db.session.add(UserFieldEntries(field_id=field_id, value=value, user_id=user.id))
+            db.session.commit()
+
+            login_user(user)
+            db.session.close()
+            return redirect(url_for("challenges.listing"))
     else:
-        return render_template("register.html", errors=errors, form=form)
+        # GET Request
+        return render_template(
+            "register.html", 
+            errors=errors, 
+            registration_fields=UserFields.query.all()
+        )
 
 
 @auth.route("/login", methods=["POST", "GET"])
 @ratelimit(method="POST", limit=5, interval=60)
 def login():
     errors = get_errors()
-    form = LoginForm()
-
     if request.method == "POST":
-        # form.validate() checks the nonce automatically via Flask-WTF
-        if form.validate():
-            name = form.name.data
-            password = form.password.data or ""
+        nonce = request.form.get("nonce")
+        if nonce != session.get("nonce"):
+            errors.append(_l("Invalid Security Token. Please refresh and try again."))
+            return render_template("login.html", errors=errors)
 
-            # Preset admin shortcut
-            if name == get_app_config("PRESET_ADMIN_NAME") and password == get_app_config("PRESET_ADMIN_PASSWORD"):
-                admin = generate_preset_admin()
-                if admin:
-                    login_user(admin)
-                    return redirect(url_for("challenges.listing"))
+        name = request.form.get("name")
+        password = request.form.get("password", "")
 
-            user = Users.query.filter_by(email=name).first() if validators.validate_email(name) else Users.query.filter_by(name=name).first()
+        if name == get_app_config("PRESET_ADMIN_NAME") and password == get_app_config("PRESET_ADMIN_PASSWORD"):
+            admin = generate_preset_admin()
+            if admin:
+                login_user(admin)
+                return redirect(url_for("challenges.listing"))
 
-            if user:
-                fail_key = f"login_fails_{user.id}"
-                fails = cache.get(fail_key) or 0
-                if fails >= 5:
-                    errors.append(_l("Account Locked: Too many failed attempts. Try again in 10 minutes."))
-                    return render_template("login.html", errors=errors, form=form)
+        user = Users.query.filter_by(email=name).first() if validators.validate_email(name) else Users.query.filter_by(name=name).first()
 
-                if verify_password(password, user.password):
-                    session.regenerate()
-                    cache.delete(fail_key)
-                    login_user(user)
-                    next_url = request.args.get("next")
-                    if next_url and validators.is_safe_url(next_url):
-                        return redirect(next_url)
-                    return redirect(url_for("challenges.listing"))
-                else:
-                    cache.set(fail_key, fails + 1, timeout=600)
-                    errors.append(_l("Your username or password is incorrect"))
+        if user:
+            fail_key = f"login_fails_{user.id}"
+            fails = cache.get(fail_key) or 0
+            if fails >= 5:
+                errors.append(_l("Account Locked: Too many failed attempts. Try again in 10 minutes."))
+                return render_template("login.html", errors=errors)
+
+            if verify_password(password, user.password):
+                session.regenerate()
+                cache.delete(fail_key)
+                login_user(user)
+                return redirect(url_for("challenges.listing"))
             else:
-                errors.append(_l("Your username or password is incorrect"))
-
-        return render_template("login.html", errors=errors, form=form)
+                cache.set(fail_key, fails + 1, timeout=600)
+                errors.append("Your username or password is incorrect")
+        else:
+            errors.append("Your username or password is incorrect")
+        
+        return render_template("login.html", errors=errors)
     else:
-        return render_template("login.html", errors=errors, form=form)
-
+        return render_template("login.html", errors=errors)
 
 @auth.route("/oauth")
 def oauth_login():
@@ -566,7 +492,9 @@ def oauth_redirect():
                 team = Teams.query.filter_by(oauth_id=team_id).first()
                 if team is None:
                     num_teams_limit = int(get_config("num_teams", default=0))
-                    num_teams = Teams.query.filter_by(banned=False, hidden=False).count()
+                    num_teams = Teams.query.filter_by(
+                        banned=False, hidden=False
+                    ).count()
                     if num_teams_limit and num_teams >= num_teams_limit:
                         abort(
                             403,
