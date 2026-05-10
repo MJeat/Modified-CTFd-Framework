@@ -1,11 +1,8 @@
-print("AUTH.PY LOADED")
-
 import re
 from flask_babel import lazy_gettext as _l
 from wtforms import PasswordField, StringField, ValidationError
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import InputRequired, Regexp, Length, StopValidation
-
 from CTFd.forms import BaseForm
 from CTFd.forms.fields import SubmitField
 from CTFd.forms.users import (
@@ -19,16 +16,21 @@ from CTFd.forms.users import (
 from CTFd.models import Users
 from CTFd.utils import get_config
 
-# --- CUSTOM VALIDATOR FUNCTION ---
-def aupp_domain_check(form, field):
-    print("CUSTOM VALIDATOR EXECUTED")
-    email = str(field.data).strip().lower()
 
+def aupp_domain_check(form, field):
+    """WTForms validator: blocks non-AUPP email addresses at the form level."""
+    email = str(field.data).strip().lower()
     if not email.endswith("@aupp.edu.kh"):
         raise StopValidation(_l("ONLY @aupp.edu.kh emails are allowed!"))
 
+
 def RegistrationForm(*args, **kwargs):
-    print("RegistrationForm factory called")
+    """
+    Factory function that builds the registration form class dynamically.
+    Using a factory allows attach_* helpers to add fields (registration_code,
+    bracket, custom fields) onto a fresh class each time, which is required
+    by CTFd's form system.
+    """
     class _RegistrationForm(BaseForm):
         name = StringField(
             _l("User Name"),
@@ -39,10 +41,10 @@ def RegistrationForm(*args, **kwargs):
             render_kw={"autofocus": True},
         )
         email = EmailField(
-            _l("Email"), 
+            _l("Email"),
             validators=[
-                InputRequired(), 
-                aupp_domain_check  # <--- FORCE CHECK HERE
+                InputRequired(),
+                aupp_domain_check,
             ]
         )
         password = PasswordField(
@@ -61,8 +63,7 @@ def RegistrationForm(*args, **kwargs):
                 raise ValidationError(_l("Username taken."))
 
         def validate_email(self, field):
-            print("validate_email method executed")
-            # Database check only
+            # Database uniqueness check only — domain check is handled by aupp_domain_check
             email_val = str(field.data).strip().lower()
             if Users.query.filter_by(email=email_val).first():
                 raise ValidationError(_l("Email already exists."))
@@ -73,6 +74,12 @@ def RegistrationForm(*args, **kwargs):
 
         @property
         def extra(self):
+            """
+            Returns the list of extra rendered field groups:
+            custom user fields, registration code, and bracket selector.
+            The register.html template calls render_extra_fields(form.extra)
+            which iterates this list to render each group in the form.
+            """
             return (
                 build_custom_user_fields(self, include_entries=False, blacklisted_items=())
                 + build_registration_code_field(self)
