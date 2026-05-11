@@ -278,8 +278,8 @@ def register():
             errors.append(_l("Usernames cannot contain numbers."))
         if not re.search(r"[!@#$%^&*]", password):
             errors.append(_l("Password must contain at least one symbol (!@#$%^&*)."))
-        if len(password) < 5 or len(password) > 10:
-            errors.append(_l("Password must be between 5 and 10 characters."))
+        if len(password) < 5 or len(password) > 20:
+            errors.append(_l("Password must be between 5 and 20 characters."))
 
         password_min_length = int(get_config("password_min_length", default=0))
         pass_min = len(password) < password_min_length
@@ -328,7 +328,7 @@ def register():
 
             login_user(user)
             db.session.close()
-            return redirect(url_for("challenges.listing"))
+            return redirect(url_for("users.private"))  # Updated to redirect unverified user to profile first
     else:
         # GET Request
         return render_template(
@@ -370,7 +370,7 @@ def login():
                 session.regenerate()
                 cache.delete(fail_key)
                 login_user(user)
-                return redirect(url_for("challenges.listing"))
+                return redirect(url_for("users.private"))	# Updated to redirect unverified user to profile first
             else:
                 cache.set(fail_key, fails + 1, timeout=600)
                 errors.append("Your username or password is incorrect")
@@ -525,7 +525,7 @@ def oauth_redirect():
                 clear_user_session(user_id=user.id)
 
             login_user(user)
-            return redirect(url_for("challenges.listing"))
+            return redirect(url_for("users.private"))	# Updated to redirect unverified user to profile first
         else:
             log("logins", "[{date}] {ip} - OAuth token retrieval failure")
             error_for(endpoint="auth.login", message="OAuth token retrieval failure.")
