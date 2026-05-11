@@ -1,0 +1,677 @@
+<style>
+  /* ─── AUPP CTF DESIGN SYSTEM ─────────────────────────────────────────── */
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --cyan:    #00F5FF;
+    --magenta: #FF006E;
+    --lime:    #CCFF00;
+    --dark:    #0A0A0F;
+    --dark2:   #12121A;
+    --dark3:   #1A1A28;
+    --glass:   rgba(10, 10, 20, 0.75);
+    --border:  rgba(0, 245, 255, 0.15);
+    --text:    #E8E8F0;
+    --muted:   #6B6B88;
+    --nav-h:   64px;
+    --font-display: 'Rajdhani', sans-serif;
+    --font-mono:    'Space Mono', monospace;
+    --font-body:    'DM Sans', sans-serif;
+  }
+
+  /* ─── NAVBAR BASE ─────────────────────────────────────────────────────── */
+  .aupp-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-h);
+    z-index: 1000;
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-display);
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    gap: 1rem;
+
+    /* scanline overlay */
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 245, 255, 0.015) 2px,
+        rgba(0, 245, 255, 0.015) 4px
+      );
+      pointer-events: none;
+    }
+
+    /* bottom glow line */
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        var(--cyan) 30%,
+        var(--magenta) 70%,
+        transparent 100%
+      );
+      opacity: 0.6;
+    }
+  }
+
+  /* ─── BRAND ───────────────────────────────────────────────────────────── */
+  .aupp-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none !important;
+    flex-shrink: 0;
+  }
+
+  .aupp-brand__badge {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--dark);
+    background: var(--cyan);
+    padding: 2px 7px;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    line-height: 1.6;
+  }
+
+  .aupp-brand__name {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    text-transform: uppercase;
+    position: relative;
+
+    /* subtle cyan text-shadow glow */
+    text-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+  }
+
+  .aupp-brand__logo {
+    height: 28px;
+    width: auto;
+    filter: brightness(1.1) drop-shadow(0 0 8px rgba(0, 245, 255, 0.5));
+  }
+
+  /* ─── NAV LINKS ───────────────────────────────────────────────────────── */
+  .aupp-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .aupp-nav__item {
+    position: relative;
+    /* CHANGED: each item carries its own --link-accent variable.
+       Hover color, underline, and background all read from this one var.
+       Default fallback is magenta so plugin-injected pages still look fine. */
+    --link-accent: var(--magenta);
+    --link-accent-bg: rgba(255, 0, 110, 0.08);
+  }
+
+  /* CHANGED: Per-link accent overrides — alternating cyan / magenta pattern.
+     .nav-cyan  → Users, Scoreboard  (cool, informational)
+     .nav-mag   → Teams, Challenges  (hot, action-oriented)
+     .nav-lime  → reserved for any special/plugin links  */
+  .aupp-nav__item.nav-cyan {
+    --link-accent: var(--cyan);
+    --link-accent-bg: rgba(0, 245, 255, 0.07);
+  }
+
+  .aupp-nav__item.nav-mag {
+    --link-accent: var(--magenta);
+    --link-accent-bg: rgba(255, 0, 110, 0.08);
+  }
+
+  .aupp-nav__item.nav-lime {
+    --link-accent: var(--lime);
+    --link-accent-bg: rgba(204, 255, 0, 0.07);
+  }
+
+  .aupp-nav__link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.85rem;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted) !important;
+    text-decoration: none !important;
+    border-radius: 4px;
+    transition: color 0.2s ease, background 0.2s ease;
+    position: relative;
+    white-space: nowrap;
+
+    /* CHANGED: underline bar now reads --link-accent instead of hardcoded magenta */
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%) scaleX(0);
+      width: 80%;
+      height: 2px;
+      background: var(--link-accent);
+      border-radius: 2px;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 0 8px var(--link-accent);
+    }
+
+    /* CHANGED: hover text color and background both use --link-accent */
+    &:hover {
+      color: var(--link-accent) !important;
+      background: var(--link-accent-bg);
+
+      &::after {
+        transform: translateX(-50%) scaleX(1);
+      }
+    }
+
+    /* CHANGED: active state also reads --link-accent so it stays consistent */
+    &.active {
+      color: var(--link-accent) !important;
+
+      &::after {
+        background: var(--link-accent);
+        box-shadow: 0 0 8px var(--link-accent);
+        transform: translateX(-50%) scaleX(1);
+      }
+    }
+  }
+
+  /* icon sizing inside nav links */
+  .aupp-nav__link i {
+    font-size: 0.8rem;
+    opacity: 0.85;
+  }
+
+  /* ─── SPACER ──────────────────────────────────────────────────────────── */
+  .aupp-nav-spacer {
+    flex: 1;
+  }
+
+  /* ─── RIGHT SIDE ACTIONS ──────────────────────────────────────────────── */
+  .aupp-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* icon-only buttons (medium screens) */
+  .aupp-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    color: var(--muted) !important;
+    text-decoration: none !important;
+    font-size: 0.85rem;
+    transition: color 0.2s, background 0.2s;
+    position: relative;
+
+    &:hover {
+      color: var(--cyan) !important;
+      background: rgba(0, 245, 255, 0.08);
+    }
+  }
+
+  /* notification badge */
+  .aupp-notif-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 14px;
+    height: 14px;
+    background: var(--magenta);
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    box-shadow: 0 0 8px var(--magenta);
+    line-height: 1;
+  }
+
+  /* CTA buttons — Register & Login */
+  .aupp-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 1rem;
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none !important;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+  }
+
+  .aupp-btn--outline {
+    color: var(--cyan) !important;
+    background: transparent;
+    border: 1px solid rgba(0, 245, 255, 0.35);
+
+    &:hover {
+      background: rgba(0, 245, 255, 0.1);
+      border-color: var(--cyan);
+      box-shadow: 0 0 16px rgba(0, 245, 255, 0.2);
+    }
+  }
+
+  .aupp-btn--solid {
+    color: var(--dark) !important;
+    background: var(--magenta);
+    border: 1px solid var(--magenta);
+
+    &:hover {
+      background: #ff2d85;
+      box-shadow: 0 0 20px rgba(255, 0, 110, 0.45);
+      transform: translateY(-1px);
+    }
+  }
+
+  /* ─── ADMIN LINK ──────────────────────────────────────────────────────── */
+  .aupp-admin-link {
+    color: var(--lime) !important;
+
+    &:hover {
+      background: rgba(204, 255, 0, 0.08) !important;
+      color: var(--lime) !important;
+    }
+  }
+
+  /* ─── DIVIDER ─────────────────────────────────────────────────────────── */
+  .aupp-nav-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 0.25rem;
+    flex-shrink: 0;
+  }
+
+  /* ─── DROPDOWN (language) ─────────────────────────────────────────────── */
+  .aupp-dropdown-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .dropdown-menu {
+    background: var(--dark2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,245,255,0.05) !important;
+    padding: 0.4rem !important;
+    font-family: var(--font-body) !important;
+  }
+
+  .dropdown-item {
+    color: var(--muted) !important;
+    font-size: 0.85rem !important;
+    border-radius: 4px !important;
+    padding: 0.4rem 0.75rem !important;
+
+    &:hover {
+      color: var(--text) !important;
+      background: rgba(0,245,255,0.08) !important;
+    }
+
+    &.bg-primary {
+      background: rgba(0,245,255,0.15) !important;
+      color: var(--cyan) !important;
+    }
+  }
+
+  /* ─── THEME TOGGLE ────────────────────────────────────────────────────── */
+  .theme-switch {
+    background: none !important;
+    border: none !important;
+  }
+
+  /* ─── MOBILE TOGGLER ──────────────────────────────────────────────────── */
+  .aupp-toggler {
+    display: none;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.3rem 0.5rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    margin-left: auto;
+
+    &:hover {
+      color: var(--cyan);
+      border-color: rgba(0, 245, 255, 0.4);
+    }
+  }
+
+  /* ─── MOBILE COLLAPSE ─────────────────────────────────────────────────── */
+  @media (max-width: 767px) {
+    .aupp-toggler {
+      display: flex;
+      align-items: center;
+    }
+
+    .aupp-collapse {
+      display: none;
+      position: absolute;
+      top: var(--nav-h);
+      left: 0;
+      right: 0;
+      background: rgba(10, 10, 20, 0.97);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      flex-direction: column;
+      padding: 0.75rem 1rem 1rem;
+      gap: 0.25rem;
+
+      &.is-open {
+        display: flex;
+      }
+    }
+
+    .aupp-nav, .aupp-nav-right {
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .aupp-nav__item, .aupp-nav-right li {
+      width: 100%;
+    }
+
+    .aupp-nav__link {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+    }
+
+    .aupp-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 0.5rem 1rem;
+    }
+
+    .aupp-icon-btn {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 0.5rem 0.75rem;
+      gap: 0.5rem;
+      border-radius: 6px;
+    }
+
+    .aupp-nav-spacer, .aupp-nav-divider { display: none; }
+
+    .aupp-nav-right { margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+  }
+
+  @media (min-width: 768px) {
+    .aupp-collapse {
+      display: contents !important;
+    }
+  }
+
+  /* body offset so content isn't hidden behind fixed navbar */
+  body { padding-top: var(--nav-h) !important; background-color: var(--dark) !important; }
+</style>
+
+<nav class="aupp-navbar" id="aupp-nav">
+
+  <!-- Brand -->
+  <a href="{{ url_for('views.static_html', route='/') }}" class="aupp-brand">
+    {% if Configs.ctf_logo %}
+      <img
+        class="aupp-brand__logo"
+        src="{{ url_for('views.files', path=Configs.ctf_logo) }}"
+        alt="{{ Configs.ctf_name }}"
+      >
+    {% else %}
+      <span class="aupp-brand__badge">></span>
+      <span class="aupp-brand__name">{{ Configs.ctf_name }}</span>
+    {% endif %}
+  </a>
+
+  <!-- Mobile toggle -->
+  <button class="aupp-toggler" id="aupp-toggler" type="button" aria-label="Toggle navigation">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Collapsible content -->
+  <div class="aupp-collapse" id="aupp-collapse">
+
+    <!-- Left nav links -->
+    <ul class="aupp-nav">
+      {% for page in Plugins.user_menu_pages %}
+        <li class="aupp-nav__item">
+          <a class="aupp-nav__link" href="{{ page.route }}"
+            {% if page.link_target %}target="{{ page.link_target }}"{% endif %}>
+            {{ page.title }}
+          </a>
+        </li>
+      {% endfor %}
+
+      {% if Configs.account_visibility != 'admins' %}
+        <!-- CHANGED: nav-cyan — Users is cyan (cool, directory-like). To change the color, simply look at the "nav-cyan" and just change to "nav-mag" for magneta -->
+        <li class="aupp-nav__item nav-cyan">
+          <a class="aupp-nav__link" href="{{ url_for('users.listing') }}">
+            <i class="fas fa-users"></i> {% trans %}Users{% endtrans %}
+          </a>
+        </li>
+
+        {% if Configs.user_mode == 'teams' %}
+          <!-- CHANGED: nav-mag — Teams is magenta (group action, energy) -->
+          <li class="aupp-nav__item nav-cyan">
+            <a class="aupp-nav__link" href="{{ url_for('teams.listing') }}">
+              <i class="fas fa-shield-alt"></i> {% trans %}Teams{% endtrans %}
+            </a>
+          </li>
+        {% endif %}
+      {% endif %}
+
+      {% if Configs.account_visibility != 'admins' and Configs.score_visibility != 'admins' %}
+        <!-- CHANGED: nav-cyan — Scoreboard is cyan (rankings, data) -->
+        <li class="aupp-nav__item nav-mag">
+          <a class="aupp-nav__link" href="{{ url_for('scoreboard.listing') }}">
+            <i class="fas fa-trophy"></i> {% trans %}Scoreboard{% endtrans %}
+          </a>
+        </li>
+      {% endif %}
+
+      <!-- CHANGED: nav-mag — Challenges is magenta (the main action, hottest link) -->
+      <li class="aupp-nav__item nav-cyan">
+        <a class="aupp-nav__link" href="{{ url_for('challenges.listing') }}">
+          <i class="fas fa-terminal"></i> {% trans %}Challenges{% endtrans %}
+        </a>
+      </li>
+    </ul>
+
+    <div class="aupp-nav-spacer"></div>
+
+    <!-- Right side actions -->
+    <ul class="aupp-nav-right">
+
+      {% if authed() %}
+
+        {% if is_admin() %}
+          <li>
+            <a class="aupp-icon-btn aupp-admin-link" href="{{ url_for('admin.view') }}"
+               data-bs-toggle="tooltip" data-bs-placement="bottom"
+               title="{% trans %}Admin Panel{% endtrans %}">
+              <i class="fas fa-wrench"></i>
+              <span class="d-md-none ms-2" style="font-family: var(--font-display); font-size: 0.9rem; letter-spacing: 0.05em;">Admin</span>
+            </a>
+          </li>
+        {% endif %}
+
+        <li>
+          <a class="aupp-icon-btn" href="{{ url_for('views.notifications') }}"
+             data-bs-toggle="tooltip" data-bs-placement="bottom"
+             title="{% trans %}Notifications{% endtrans %}">
+            <i class="fas fa-bell"></i>
+            <span x-data x-show="$store.unread_count > 0"
+                  x-text="$store.unread_count"
+                  class="aupp-notif-badge"></span>
+            <span class="d-md-none ms-2" style="font-family: var(--font-display); font-size: 0.9rem; letter-spacing: 0.05em;">Notifications</span>
+          </a>
+        </li>
+
+        {% if Configs.user_mode == "teams" %}
+          <li>
+            <a class="aupp-icon-btn" href="{{ url_for('teams.private') }}"
+               data-bs-toggle="tooltip" data-bs-placement="bottom"
+               title="{% trans %}Team{% endtrans %}">
+              <i class="fas fa-users"></i>
+              <span class="d-md-none ms-2" style="font-family: var(--font-display); font-size: 0.9rem;">Team</span>
+            </a>
+          </li>
+        {% endif %}
+
+        <li>
+          <a class="aupp-icon-btn" href="{{ url_for('users.private') }}"
+             data-bs-toggle="tooltip" data-bs-placement="bottom"
+             title="{% trans %}Profile{% endtrans %}">
+            <i class="fas fa-user-circle"></i>
+            <span class="d-md-none ms-2" style="font-family: var(--font-display); font-size: 0.9rem;">Profile</span>
+          </a>
+        </li>
+
+        <li>
+          <a class="aupp-icon-btn" href="{{ url_for('views.settings') }}"
+             data-bs-toggle="tooltip" data-bs-placement="bottom"
+             title="{% trans %}Settings{% endtrans %}">
+            <i class="fas fa-cogs"></i>
+            <span class="d-md-none ms-2" style="font-family: var(--font-display); font-size: 0.9rem;">Settings</span>
+          </a>
+        </li>
+
+        <li class="aupp-nav-divider"></li>
+
+        <li>
+          <a class="aupp-icon-btn" href="{{ url_for('auth.logout') }}"
+             data-bs-toggle="tooltip" data-bs-placement="bottom"
+             title="{% trans %}Logout{% endtrans %}"
+             style="color: var(--magenta) !important;">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="d-md-none ms-2" style="font-family: var(--font-display); font-size: 0.9rem;">Logout</span>
+          </a>
+        </li>
+
+      {% else %}
+
+        {% if registration_visible() %}
+          <li>
+            <a class="aupp-btn aupp-btn--outline" href="{{ url_for('auth.register') }}">
+              <i class="fas fa-user-plus"></i>
+              {% trans %}Register{% endtrans %}
+            </a>
+          </li>
+        {% endif %}
+
+        <li>
+          <a class="aupp-btn aupp-btn--solid" href="{{ url_for('auth.login') }}">
+            <i class="fas fa-sign-in-alt"></i>
+            {% trans %}Login{% endtrans %}
+          </a>
+        </li>
+
+      {% endif %}
+
+      <!-- Language switcher -->
+      <!--
+      <li class="nav-item dropdown">
+        <button class="aupp-icon-btn aupp-dropdown-btn dropdown-toggle"
+                type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                data-bs-toggle="tooltip" title="{% trans %}Change language{% endtrans %}">
+          <i class="fas fa-language"></i>
+        </button>
+        <form x-data="LanguageForm">
+          <ul class="dropdown-menu dropdown-menu-end">
+            {% set curr_lang = get_locale() %}
+            {%- for lang in Languages.names.items() %}
+            <li>
+              <span class="dropdown-item {{ 'bg-primary' if (curr_lang == lang[0]) }}"
+                    @click="set" value="{{ lang[0] }}">
+                {{ lang[1] }}
+              </span>
+            </li>
+            {%- endfor %}
+          </ul>
+        </form>
+      </li>
+      -->
+
+      <!-- Theme toggle -->
+      <!--
+      <li>
+        <button class="aupp-icon-btn theme-switch" type="button"
+                data-bs-toggle="tooltip" data-bs-placement="bottom"
+                title="{% trans %}Toggle theme{% endtrans %}">
+          <i class="fas fa-sun"></i>
+        </button>
+      </li>
+      -->
+
+    </ul>
+  </div>
+</nav>
+
+<script>
+  // Mobile menu toggle
+  (function() {
+    const toggler = document.getElementById('aupp-toggler');
+    const collapse = document.getElementById('aupp-collapse');
+    if (toggler && collapse) {
+      toggler.addEventListener('click', function() {
+        collapse.classList.toggle('is-open');
+        const icon = toggler.querySelector('i');
+        icon.classList.toggle('fa-bars');
+        icon.classList.toggle('fa-times');
+      });
+    }
+
+    // Highlight active link based on current path
+    const links = document.querySelectorAll('.aupp-nav__link');
+    links.forEach(link => {
+      if (link.href && window.location.pathname.startsWith(new URL(link.href).pathname) && new URL(link.href).pathname !== '/') {
+        link.classList.add('active');
+      }
+    });
+  })();
+</script>
