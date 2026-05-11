@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  :root {
+    --cyan: #00f5ff;
+    --magenta: #ff006e;
+    --dark-bg: #050208;
+  }
+  body { background-color: var(--dark-bg); }
+
+  .auth-card {
+    max-width: 550px;
+    margin: 4rem auto;
+    background: rgba(10, 5, 15, 0.9);
+    border: 1px solid rgba(0, 245, 255, 0.3);
+    padding: 2.5rem;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 0 30px rgba(0, 245, 255, 0.1);
+  }
+
+  .auth-card::before {
+    content: ""; position: absolute; top: -1px; left: -1px; width: 25px; height: 25px;
+    border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan);
+  }
+  .auth-card::after {
+    content: ""; position: absolute; bottom: -1px; right: -1px; width: 25px; height: 25px;
+    border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan);
+  }
+
+  .terminal-header { color: var(--cyan); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+  .form-label { color: var(--cyan); font-family: var(--font-mono); font-size: 0.85rem; text-transform: uppercase; }
+  
+  .form-control {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(0, 245, 255, 0.2) !important;
+    color: #fff !important;
+  }
+
+  .form-control:focus {
+    border-color: var(--cyan) !important;
+    box-shadow: 0 0 12px rgba(0, 245, 255, 0.2);
+  }
+
+  .btn-cyan {
+    background: var(--cyan) !important;
+    color: #000 !important;
+    font-weight: 700;
+    border: none;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: all 0.2s ease;
+  }
+
+  .btn-cyan:hover {
+    background: #00e0ff !important;
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .form-text { color: rgba(0, 245, 255, 0.5) !important; font-size: 0.75rem; }
+
+  /* Ensures the Registration Code labels match your theme */
+  .form-group label { color: var(--cyan); font-family: var(--font-mono); font-size: 0.85rem; text-transform: uppercase; }
+</style>
+
+<div class="container">
+  <div class="auth-card">
+    <div class="text-center mb-4">
+      <h2 class="terminal-header">{% trans %}REGISTER{% endtrans %}</h2>
+      <small class="text-muted d-block mt-2">-- RECRUITMENT PROTOCOL --</small>
+    </div>
+
+    {% include "components/errors.html" %}
+
+    {# MINIMAL CHANGE: Fetch the form factory and the macro needed for the Registration Code #}
+    {% set form = Forms.auth.RegistrationForm() %}
+    {% from "macros/forms.html" import render_extra_fields %}
+
+    <form method="post" accept-charset="utf-8">
+      <input type="hidden" name="nonce" value="{{ Session.nonce }}">
+
+      <div class="mb-3">
+        <b><label class="form-label" for="name">User Name</label> <span class="text-danger">*</span></b>
+        <input class="form-control" id="name" name="name" type="text" value="{{ name or '' }}" required>
+        <small class="form-text">Usernames cannot contain numbers.</small>
+      </div>
+
+      <div class="mb-3">
+        <b><label class="form-label" for="email">Email Address</label> <span class="text-danger">*</span></b>
+        <input class="form-control" id="email" name="email" type="email" value="{{ email or '' }}" required>
+        <small class="form-text">Must be an @aupp.edu.kh address.</small>
+      </div>
+
+      <div class="mb-3">
+        <b><label class="form-label" for="password">Password</label> <span class="text-danger">*</span></b>
+        <input class="form-control" id="password" name="password" type="password" required>
+        <small class="form-text">5-20 chars. Must include a symbol (!@#$%^&*).</small>
+      </div>
+
+      {# MINIMAL CHANGE: Replace manual loop with the standard CTFd extra fields call #}
+      <div class="mb-3">
+        {{ render_extra_fields(form.extra) }}
+      </div>
+
+      <div class="mt-4">
+        <button type="submit" class="btn btn-cyan w-100 py-2">Initialize Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
