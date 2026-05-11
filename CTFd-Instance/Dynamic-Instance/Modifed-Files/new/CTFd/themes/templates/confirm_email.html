@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* From Gemini: Maintain the Bold White look on Black Background */
+    .confirm-container {
+        color: #ffffff !important;
+        font-weight: bold !important;
+        padding-top: 80px;
+    }
+    .confirm-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 40px;
+        backdrop-filter: blur(10px);
+    }
+    h1 { font-weight: 900; color: #007bff; text-transform: uppercase; }
+    .btn-primary { background-color: #007bff !important; border: none !important; font-weight: bold; }
+    .btn-secondary { background: transparent !important; border: 1px solid #ffffff !important; color: #fff !important; font-weight: bold; }
+</style>
+
+<div class="container confirm-container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2 confirm-card text-center">
+            <i class="fas fa-envelope-open-text fa-4x mb-4 text-primary"></i>
+            <h1>{% trans %}Account Verification{% endtrans %}</h1>
+            <hr class="border-secondary mb-4">
+            
+            {% include "components/errors.html" %}
+
+            {% if request.args.get('flow') == "init" %}
+                <h5 class="mb-3">{% trans %}To begin acquiring intel, please confirm your email address.{% endtrans %}</h5>
+                <p class="opacity-75">{% trans %}Click the button below and follow the link sent to your inbox.{% endtrans %}</p>
+            {% else %}
+                <h5 class="text-success mb-3">{% trans %}Verification link dispatched.{% endtrans %}</h5>
+                <p class="opacity-75">{% trans %}Check your inbox (and spam). Once clicked, you will gain full access to CTF assets.{% endtrans %}</p>
+            {% endif %}
+
+            <div class="mt-5">
+                {% with form = Forms.auth.ConfirmForm() %}
+                <form method="POST" action="{{ url_for('auth.confirm') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.submit(class="btn btn-primary w-100 py-3", value="RESEND VERIFICATION") }}
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('views.settings') }}" class="btn btn-secondary w-100 py-3">
+                                {% trans %}UPDATE EMAIL{% endtrans %}
+                            </a>
+                        </div>
+                        {{ form.nonce() }}
+                    </div>
+                </form>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
