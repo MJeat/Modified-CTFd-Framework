@@ -49,7 +49,7 @@ def RegistrationForm(*args, **kwargs):
             _l("Password"),
             validators=[
                 InputRequired(),
-                Length(min=5, max=10, message=_l("Must be 5-10 characters."))
+                Length(min=5, max=20, message=_l("Must be 5-20 characters."))
             ],
         )
         submit = SubmitField(_l("Submit"))
