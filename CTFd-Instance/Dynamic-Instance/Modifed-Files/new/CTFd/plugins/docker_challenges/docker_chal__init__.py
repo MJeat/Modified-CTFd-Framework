@@ -178,10 +178,12 @@ def define_docker_status(app):
         for i in docker_tracker:
             if is_teams_mode():
                 name = Teams.query.filter_by(id=i.team_id).first()
-                i.team_id = name.name
+                # Safety check to prevent NoneType attribute error
+                i.team_id = name.name if name else f"Deleted Team ({i.team_id})"
             else:
                 name = Users.query.filter_by(id=i.user_id).first()
-                i.user_id = name.name
+                # Safety check to prevent NoneType attribute error
+                i.user_id = name.name if name else f"Deleted User ({i.user_id})"
         return render_template("admin_docker_status.html", dockers=docker_tracker)
 
     app.register_blueprint(admin_docker_status)
