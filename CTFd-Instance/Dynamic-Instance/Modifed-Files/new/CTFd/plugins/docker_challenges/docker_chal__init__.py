@@ -178,12 +178,10 @@ def define_docker_status(app):
         for i in docker_tracker:
             if is_teams_mode():
                 name = Teams.query.filter_by(id=i.team_id).first()
-                # Safety check to prevent NoneType attribute error
-                i.team_id = name.name if name else f"Deleted Team ({i.team_id})"
+                i.team_id = name.name
             else:
                 name = Users.query.filter_by(id=i.user_id).first()
-                # Safety check to prevent NoneType attribute error
-                i.user_id = name.name if name else f"Deleted User ({i.user_id})"
+                i.user_id = name.name
         return render_template("admin_docker_status.html", dockers=docker_tracker)
 
     app.register_blueprint(admin_docker_status)
@@ -318,18 +316,24 @@ def create_container(docker, image, team, portbl):
     assigned_ports = dict()
     for i in needed_ports:
         while True:
-            assigned_port = random.choice(range(30000, 60000))
+            assigned_port = random.choice(range(30000, 60000))  # Challenges port range
+			# --- THE DUPLICATE CHECK ---
+			# 'portbl' is the "Port Blacklist" (all ports currently taken in the DB). If the random port is NOT in the blacklist, it's safe to use
             if assigned_port not in portbl:
                 assigned_ports['%s/tcp' % assigned_port] = {}
                 break
     ports = dict()
     bindings = dict()
     tmp_ports = list(assigned_ports.keys())
+    # Map the Internal Container Port to the Randomly Assigned Host Port
     for i in needed_ports:
         ports[i] = {}
+        # Pop a unique host port and bind it to the challenge's required port
         bindings[i] = [{"HostPort": tmp_ports.pop()}]
     headers = {'Content-Type': "application/json"}
+    # Send the configuration to the Docker API to create and start the container
     data = json.dumps({"Image": image, "ExposedPorts": ports, "HostConfig": {"PortBindings": bindings}})
+    # Code below sends the POST request to Docker
     if tls:
         cert, verify = get_client_cert(docker)
         r = requests.post(url="%s/containers/create?name=%s" % (URL_TEMPLATE, container_name), cert=cert,
